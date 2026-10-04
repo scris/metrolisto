@@ -1,8 +1,25 @@
-/** Usage: node scripts/import-amap.mjs /path/to/shanghai.json /path/to/beijing.json
+/** Usage: node scripts/import-amap.mjs /path/to/city.json [/path/to/another-city.json ...]
  * Offline build-time adapter. Runtime uses the checked-in, provider-independent schema.
  */
 import fs from 'node:fs';
 import { formatCityData } from './format-city-data.mjs';
+
+const cityConfigs = {
+  shanghai: { amapId: '3100' },
+  beijing: { amapId: '1100' },
+  shenzhen: {
+    amapId: '4403',
+    // Same POI and explicit interchange in Amap, despite separate station IDs.
+    stationIds: { 440300024058036: '440300024063028' }, // 大剧院 (1/2/5号线)
+    shortNames: { '2号线/8号线': '2/8', 坪山云巴1号线: '云巴1' },
+  },
+  guangzhou: {
+    amapId: '4401',
+    preservedLines: ['guangzhou-佛山3号线'],
+    stationIds: { 900000074701016: '900000099784007' }, // 新市墟 (12/14号线)
+    shortNames: { '14号线支线(知识城线)': '14知识城', APM线: 'APM', 广佛线: '广佛' },
+  },
+};
 
 const point = (p) => p.split(' ').map(Number);
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -23,9 +40,17 @@ function slicePath(path, a, b, loop) {
   }
   return [a, ...points, b].filter((p, i, all) => !i || distance(p, all[i - 1]) > 0.5);
 }
-function makeCity(input, current) {
-  const { id } = current;
+function makeCity(input) {
   const raw = JSON.parse(fs.readFileSync(input, 'utf8'));
+  const entry = Object.entries(cityConfigs).find(([, config]) => config.amapId === raw.i);
+  if (!entry || !Array.isArray(raw.l) || !raw.l.length)
+    throw new Error(`Unsupported or invalid Amap city data: ${input}`);
+  const [id, config] = entry;
+  const current = JSON.parse(
+    fs.readFileSync(new URL(`../src/data/${id}.json`, import.meta.url), 'utf8'),
+  );
+  const currentStations = new Map(current.stations.map((s) => [s.id, s]));
+  const currentLines = new Map(current.lines.map((l) => [l.id, l]));
   const stations = new Map(),
     lines = new Map(),
     segments = new Map();
@@ -43,8 +68,13 @@ function makeCity(input, current) {
       });
   };
   for (const l of raw.l) {
-    const lineId = `${id}-${l.ln}`;
-    const name = l.ln === '市域机场线' ? '机场联络线' : l.ln;
+    const name =
+      l.ln === '市域机场线'
+        ? '机场联络线'
+        : id === 'shenzhen' && l.ln !== '2号线/8号线'
+          ? l.ln.split('/')[0]
+          : l.ln;
+    const lineId = `${id}-${id === 'shenzhen' ? name : l.ln}`;
     if (!lines.has(lineId))
       lines.set(lineId, {
         id: lineId,
@@ -52,11 +82,13 @@ function makeCity(input, current) {
         shortNames: [
           {
             language: 'zh-CN',
-            value: name
-              .replace('号线八通线', '')
-              .replace('号线大兴线', '')
-              .replace('号线', '')
-              .replace('市域', ''),
+            value:
+              config.shortNames?.[name] ??
+              name
+                .replace('号线八通线', '')
+                .replace('号线大兴线', '')
+                .replace('号线', '')
+                .replace('市域', ''),
           },
         ],
         color: `#${l.cl}`,
@@ -71,8 +103,10 @@ function makeCity(input, current) {
         stationIds: [],
       });
     const line = lines.get(lineId);
-    // Official station pages identify these as not serving passengers at the snapshot date.
-    const stops = l.st.filter((s) => s.su !== '0' && !(id === 'beijing' && s.n === '通运门'));
+    // Exclude provider-marked non-serving stops and the documented Beijing exception.
+    const stops = l.st
+      .filter((s) => s.su !== '0' && !(id === 'beijing' && s.n === '通运门'))
+      .map((s) => ({ ...s, si: config.stationIds?.[s.si] ?? s.si }));
     for (const s of stops) {
       const [x, y] = point(s.p);
       if (!stations.has(s.si))
@@ -93,6 +127,36 @@ function makeCity(input, current) {
         b = stops[(i + 1) % stops.length];
       addSegment(lineId, a.si, b.si, slicePath(path, point(a.p), point(b.p), l.lo === '1'));
     }
+  }
+  // Lines absent from the primary source are maintained only in the city JSON.
+  // Preserve their station data and explicit segments, including fitted geometry.
+  for (const lineId of config.preservedLines ?? []) {
+    const line = currentLines.get(lineId);
+    if (!line) throw new Error(`Missing preserved line in src/data/${id}.json: ${lineId}`);
+    if (lines.has(lineId))
+      throw new Error(`${lineId} is now in the primary source; review its preservation rule`);
+    const sharedStations = new Set(
+      current.lines.filter((l) => l.id !== lineId).flatMap((l) => l.stationIds),
+    );
+    for (const stationId of line.stationIds) {
+      const station = currentStations.get(stationId);
+      if (!station) throw new Error(`Missing preserved station: ${stationId}`);
+      const imported = stations.get(stationId);
+      if (sharedStations.has(stationId) && !imported)
+        throw new Error(`Missing preserved-line interchange: ${stationId}`);
+      if (
+        imported &&
+        (imported.names.find((n) => n.language === 'zh-CN')?.value !==
+          station.names.find((n) => n.language === 'zh-CN')?.value ||
+          imported.x !== station.x ||
+          imported.y !== station.y)
+      )
+        throw new Error(`Changed interchange ${stationId}; review src/data/${id}.json`);
+      if (!imported) stations.set(stationId, station);
+    }
+    lines.set(lineId, line);
+    for (const edge of current.segments.filter((s) => s.lineId === lineId))
+      segments.set(edge.id, edge);
   }
   // Dahongmen's platforms now form one interchange despite separate provider IDs.
   if (id === 'beijing') {
@@ -171,7 +235,7 @@ function makeCity(input, current) {
     );
     byName('浦东1号2号航站楼').aliases.push('浦东国际机场', '浦东机场', 'pudongairport');
     byName('上海松江站').aliases.push('松江南站');
-  } else {
+  } else if (id === 'beijing') {
     addLine(
       '亦庄有轨电车T1线',
       '亦庄T1',
@@ -278,15 +342,16 @@ function makeCity(input, current) {
   }
   // The city JSON is the sole source for reviewed names and metadata. Refresh only
   // provider geometry/topology; contributors edit names directly in that JSON.
-  const currentStations = new Map(current.stations.map((s) => [s.id, s]));
-  const currentLines = new Map(current.lines.map((l) => [l.id, l]));
   for (const station of stations.values()) {
     const reviewed = currentStations.get(station.id);
     if (reviewed) {
       station.names = reviewed.names;
       station.aliases = reviewed.aliases;
     }
-    if (!station.names.some((n) => /^en(?:-|$)/i.test(n.language) && n.value.trim()))
+    if (
+      current.attribution?.kind === 'official' &&
+      !station.names.some((n) => /^en(?:-|$)/i.test(n.language) && n.value.trim())
+    )
       console.warn(`请在 src/data/${id}.json 的 names 中核对并填写官方英文站名：${station.id}`);
   }
   for (const line of lines.values()) {
@@ -296,6 +361,7 @@ function makeCity(input, current) {
       line.shortNames = reviewed.shortNames;
     }
     if (
+      current.attribution?.kind === 'official' &&
       ![line.names, line.shortNames].every((names) =>
         names.some((n) => /^en(?:-|$)/i.test(n.language) && n.value.trim()),
       )
@@ -305,7 +371,11 @@ function makeCity(input, current) {
   return {
     ...current,
     stations: [...stations.values()],
-    lines: [...lines.values()],
+    // Keep the explicit display order from the city JSON; append newly added lines.
+    lines: [
+      ...current.lines.flatMap((line) => (lines.has(line.id) ? [lines.get(line.id)] : [])),
+      ...[...lines.values()].filter((line) => !currentLines.has(line.id)),
+    ],
     segments: [...segments.values()],
     ...(id === 'shanghai'
       ? {
@@ -323,21 +393,21 @@ function makeCity(input, current) {
       : {}),
   };
 }
-if (process.argv.length !== 4)
-  throw new Error(
-    'Usage: node scripts/import-amap.mjs /path/to/shanghai.json /path/to/beijing.json',
+const inputs = process.argv.slice(2);
+if (!inputs.length) {
+  console.error(
+    'Usage: node scripts/import-amap.mjs /path/to/city.json [/path/to/another-city.json ...]',
   );
-const updates = [];
-for (const [i, id] of ['shanghai', 'beijing'].entries()) {
-  const path = new URL(`../src/data/${id}.json`, import.meta.url);
-  const current = JSON.parse(fs.readFileSync(path, 'utf8'));
-  const city = makeCity(process.argv[i + 2], current);
-  updates.push({
-    path,
-    city,
-    json: formatCityData(city),
-  });
+  process.exit(1);
 }
+const cities = inputs.map(makeCity);
+if (new Set(cities.map((city) => city.id)).size !== cities.length)
+  throw new Error('Pass only one input file per city');
+const updates = cities.map((city) => ({
+  path: new URL(`../src/data/${city.id}.json`, import.meta.url),
+  city,
+  json: formatCityData(city),
+}));
 for (const { path, city, json } of updates) {
   fs.writeFileSync(path, json);
   console.log(

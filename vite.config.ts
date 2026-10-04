@@ -8,7 +8,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) return 'vendor';
-          if (/data\/(shanghai|beijing)\.json/.test(id)) return 'networks';
+          if (/data\/(shanghai|beijing|shenzhen|guangzhou)\.json/.test(id)) return 'networks';
         },
       },
     },

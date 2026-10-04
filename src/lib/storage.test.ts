@@ -146,6 +146,43 @@ describe('persistent exploration history', () => {
     vi.stubGlobal('localStorage', { getItem: () => JSON.stringify(backup) });
     expect(readSavedData(cities)).toEqual({ data: backup, error: null });
   });
+  it.each(['shenzhen', 'guangzhou'])(
+    '%s journeys round-trip alongside existing city records',
+    (cityId) => {
+      const city = cities.find((c) => c.id === cityId)!;
+      const [from, to] = city.lines[0].stationIds;
+      const trip: Journey = {
+        ...findRoute(createNetwork(city), from, to)!,
+        id: `${cityId}-trip`,
+        kind: 'trip',
+        createdAt: '2026-10-03T00:00:00Z',
+      };
+      const backup = {
+        version: 1,
+        cities: { shanghai: [journey, manual], beijing: [], [cityId]: [trip] },
+      };
+      expect(validateBackup(JSON.parse(JSON.stringify(backup)), cities)).toEqual(backup);
+    },
+  );
+  it('round-trips Guangzhou line 3 train changes and lights Tiyu Xilu as a transfer', () => {
+    const city = cities.find((c) => c.id === 'guangzhou')!;
+    const stationId = (name: string) =>
+      city.stations.find((s) => localisedName(s, 'zh-CN') === name)!.id;
+    const trip: Journey = {
+      ...findRoute(createNetwork(city), stationId('石牌桥'), stationId('林和西'))!,
+      id: 'guangzhou-line3-transfer',
+      kind: 'trip',
+      createdAt: '2026-10-04T00:00:00Z',
+    };
+    const backup = { version: 1, cities: { guangzhou: [trip] } };
+    const restored = validateBackup(JSON.parse(JSON.stringify(backup)), cities);
+    expect(restored).toEqual(backup);
+    expect(getProgress(restored.cities.guangzhou).stations.get(stationId('体育西路'))).toEqual({
+      passed: true,
+      transferred: true,
+      visited: false,
+    });
+  });
   it('cancels all manual lighting for one station while retaining trips and other stations', () => {
     const other = { ...manual, id: 'manual-other', stationIds: [id('新闸路')] };
     const records = [journey, manual, { ...manual, id: 'imported-manual' }, other];

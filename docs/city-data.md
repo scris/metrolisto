@@ -9,12 +9,14 @@
 
 ```ts
 import yourCity from './your-city.json';
-export const cities: CityData[] = [shanghai, beijing, yourCity].map(validateCity);
+export const cities: CityData[] = [shanghai, beijing, shenzhen, guangzhou, yourCity].map(
+  validateCity,
+);
 ```
 
 3. 运行 `pnpm format:city`，再运行 `pnpm format:check`、`pnpm test` 和 `pnpm build`。选择新增城市，检查线路、换乘、终点、支线和环线几何。
 
-无需修改地图、算法、存储键或页面逻辑。内置上海/北京线路数量的断言只适用于这两城，全网连通性测试会自动覆盖新城市。
+无需修改地图、算法、存储键或页面逻辑。内置城市的线路断言只适用于各自城市，全网连通性测试会自动覆盖新城市。
 
 ## 必须遵循的 JSON 格式
 
@@ -53,21 +55,21 @@ pnpm format:check      # 检查城市数据及其余项目文件
 
 ## 顶层字段
 
-| 字段                | 类型                | 说明                                                |
-| ------------------- | ------------------- | --------------------------------------------------- |
-| `schemaVersion`     | `1`                 | 协议版本                                            |
-| `id`                | string              | 稳定标识，使用小写字母、数字、短横线，如 `shanghai` |
-| `zhName` / `enName` | string              | 中文城市名、英文城市名，两项均必填                  |
-| `localName`         | `{name, language}`? | 可选当地城市名及 BCP 47 语言标签，如 `서울` / `ko`  |
-| `updatedAt`         | string              | 数据日期，如 `2026-10-03`                           |
-| `description`       | string              | 运营范围说明                                        |
-| `descriptionEn`     | string?             | 英文运营范围说明                                    |
-| `attribution`       | object?             | 官方维护或具名用户贡献，见下文                      |
-| `center`            | `[number, number]`  | 默认地图视图中心（示意坐标）                        |
-| `sources`           | `{title, url}[]`    | 数据来源，URL 使用 HTTP(S)                          |
-| `stations`          | Station[]           | 去重后的站点                                        |
-| `lines`             | MetroLine[]         | 线路                                                |
-| `segments`          | Segment[]           | 所有相邻站点区间                                    |
+| 字段                | 类型                       | 说明                                                |
+| ------------------- | -------------------------- | --------------------------------------------------- |
+| `schemaVersion`     | `1`                        | 协议版本                                            |
+| `id`                | string                     | 稳定标识，使用小写字母、数字、短横线，如 `shanghai` |
+| `zhName` / `enName` | string                     | 中文城市名、英文城市名，两项均必填                  |
+| `localName`         | `{name, language}`?        | 可选当地城市名及 BCP 47 语言标签，如 `서울` / `ko`  |
+| `updatedAt`         | string                     | 数据日期，如 `2026-10-03`                           |
+| `description`       | string                     | 运营范围说明                                        |
+| `descriptionEn`     | string?                    | 英文运营范围说明                                    |
+| `attribution`       | object?                    | 官方维护或具名用户贡献，见下文                      |
+| `center`            | `[number, number]`         | 默认地图视图中心（示意坐标）                        |
+| `sources`           | `{title, titleEn?, url}[]` | 数据来源，可选英文标题，URL 使用 HTTP(S)            |
+| `stations`          | Station[]                  | 去重后的站点                                        |
+| `lines`             | MetroLine[]                | 线路                                                |
+| `segments`          | Segment[]                  | 所有相邻站点区间                                    |
 
 ## 名称、语言与贡献者
 
@@ -176,7 +178,7 @@ interface MetroLine {
 
 `stationIds` 只描述线路包含哪些站点，用于筛选和统计。**不会根据数组顺序隐式连线**。请用下面的 `segments` 明确给出所有区间，因此环线、支线和单向线路不需要特殊插件。
 
-同一线路的支线使用同一个 `lineId`，不会被当作跨线换乘；当前协议不另外模拟同线路内的列车交路或同线换车。
+同一线路的支线使用同一个 `lineId`，不会被当作跨线换乘；需要同线换车时用下文的 `sameLineTransfers` 声明。
 
 ## 区间
 
@@ -204,7 +206,7 @@ interface Segment {
 
 每条旅程保存有序的 `stationIds`、`segmentIds`、`lineIds`、`transferIds`。起终点为上下车，实际换车站为换乘，其余为途经。多次记录取并集，换乘和上下车状态分别保留。
 
-内置校验会拒绝重复 ID、无效坐标、缺失引用、不合法颜色、与线路归属不符的区间等。测试还检查所有站点双向可达。如果新增城市确有互不连接的独立运营网络，可扩展连通性测试按连通分量断言；跨网络路径会正常返回“未找到通路”。
+内置校验会拒绝重复 ID、无效坐标、缺失引用、不合法颜色、与线路归属不符的区间等。测试还检查所有站点双向可达。如果新增城市确有互不连接的独立运营网络（如深圳坪山云巴），在连通性测试中按连通分量断言；跨网络路径会正常返回“未找到通路”。
 
 可选 `sameLineTransfers` 为区间 ID 对数组：每对必须是同一线路上相邻的两个区间，表示在它们之间换车也计为换乘。例如上海 10 号线龙溪路的两个支线方向；主干至任一支线仍算直达。线路收藏仍按 `lineId` 合并，路线搜索会保留到达区间状态来判断换车。
 

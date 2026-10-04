@@ -6,7 +6,9 @@ import { validateCity } from './validate';
 import exampleCity from '../../docs/city.example.json';
 
 const sh = createNetwork(cities[0]),
-  bj = createNetwork(cities[1]);
+  bj = createNetwork(cities[1]),
+  sz = createNetwork(cities.find((c) => c.id === 'shenzhen')!),
+  gz = createNetwork(cities.find((c) => c.id === 'guangzhou')!);
 const id = (network: typeof sh, name: string) =>
   network.city.stations.find((s) => localisedName(s, 'zh-CN') === name)!.id;
 const route = (network: typeof sh, from: string, to: string, via: string[] = []) =>
@@ -40,33 +42,40 @@ describe('complete city networks', () => {
       bj.city.lines.some((l) => /S2|城市副中心|怀柔|通密/.test(localisedName(l, 'zh-CN'))),
     ).toBe(false);
   });
-  it.each(cities)('$zhName: every station is reachable in both directions', (city) => {
-    const network = createNetwork(city),
-      start = city.stations[0].id;
-    for (const reverse of [false, true]) {
-      const reached = new Set([start]),
-        queue = [start];
-      while (queue.length) {
-        const s = queue.pop()!;
-        for (const edge of city.segments) {
-          const next = reverse
-            ? edge.to === s
-              ? edge.from
-              : !edge.oneWay && edge.from === s
-                ? edge.to
-                : null
-            : edge.from === s
-              ? edge.to
-              : !edge.oneWay && edge.to === s
+  it.each(cities)('$zhName: every station is reachable within its operating network', (city) => {
+    // Amap supplies Pingshan SkyShuttle as a separate network, without walking links.
+    const independent =
+      city.id === 'shenzhen'
+        ? city.lines.find((l) => localisedName(l, 'zh-CN') === '坪山云巴1号线')!.stationIds
+        : [];
+    const groups = [city.stations.map((s) => s.id).filter((id) => !independent.includes(id))];
+    if (independent.length) groups.push(independent);
+    for (const group of groups) {
+      for (const reverse of [false, true]) {
+        const reached = new Set([group[0]]),
+          queue = [group[0]];
+        while (queue.length) {
+          const s = queue.pop()!;
+          for (const edge of city.segments) {
+            const next = reverse
+              ? edge.to === s
                 ? edge.from
-                : null;
-          if (next && !reached.has(next)) {
-            reached.add(next);
-            queue.push(next);
+                : !edge.oneWay && edge.from === s
+                  ? edge.to
+                  : null
+              : edge.from === s
+                ? edge.to
+                : !edge.oneWay && edge.to === s
+                  ? edge.from
+                  : null;
+            if (next && !reached.has(next)) {
+              reached.add(next);
+              queue.push(next);
+            }
           }
         }
+        expect(reached).toEqual(new Set(group));
       }
-      expect(reached.size).toBe(network.stationById.size);
     }
   });
   it('does not offer paused or unopened Beijing stations', () => {
@@ -87,6 +96,105 @@ describe('complete city networks', () => {
     const duplicate = structuredClone(cities[0]);
     duplicate.stations.push(duplicate.stations[0]);
     expect(() => validateCity(duplicate)).toThrow();
+  });
+});
+
+describe('Shenzhen and Guangzhou topology', () => {
+  it('keeps Shenzhen lines 2/8 through-running and line 6 branch separate', () => {
+    const coastal = route(sz, '莲塘', '溪涌');
+    expect(new Set(coastal.lineIds)).toEqual(new Set(['shenzhen-2号线/8号线']));
+    expect(coastal.transferIds).toHaveLength(0);
+    const branch = route(sz, '凤凰城', '深理工');
+    expect(names(sz, branch.transferIds)).toEqual(['光明']);
+    expect(new Set(branch.lineIds)).toEqual(new Set(['shenzhen-6号线', 'shenzhen-6号线支线']));
+  });
+  it('connects the explicit interchanges despite differing source station IDs', () => {
+    expect(sz.city.stations.filter((s) => localisedName(s, 'zh-CN') === '大剧院')).toHaveLength(1);
+    expect(names(sz, route(sz, '东门', '国贸').transferIds)).toEqual(['大剧院']);
+    expect(gz.city.stations.filter((s) => localisedName(s, 'zh-CN') === '新市墟')).toHaveLength(1);
+    expect(names(gz, route(gz, '棠涌', '云霄路').transferIds)).toEqual(['新市墟']);
+  });
+  it('routes within Pingshan SkyShuttle without inventing a metro transfer', () => {
+    const trip = route(sz, '比亚迪北', '坪山高铁站');
+    expect(trip.segmentIds).toHaveLength(10);
+    expect(trip.transferIds).toHaveLength(0);
+    expect(findRoute(sz, id(sz, '比亚迪北'), id(sz, '坪山'))).toBeNull();
+    expect(findRoute(sz, id(sz, '坪山'), id(sz, '比亚迪北'))).toBeNull();
+  });
+  it('joins Guangzhou line 3 branches only through Tiyu Xilu and skips closed stops', () => {
+    const line3 = createNetwork({
+      ...gz.city,
+      segments: gz.city.segments.filter((s) => s.lineId === 'guangzhou-3号线'),
+    });
+    const trip = route(line3, '天河客运站', '机场北(T2)');
+    expect(names(line3, trip.stationIds)).toContain('体育西路');
+    expect(names(line3, trip.transferIds)).toEqual(['体育西路']);
+    expect(gz.city.stations.some((s) => localisedName(s, 'zh-CN') === '机场南(1号航站楼)')).toBe(
+      false,
+    );
+    expect(names(gz, route(gz, '高增', '机场北(T2)').stationIds)).toEqual(['高增', '机场北(T2)']);
+  });
+  it.each([
+    ['石牌桥', '林和西', ['体育西路']],
+    ['珠江新城', '林和西', []],
+    ['珠江新城', '石牌桥', []],
+  ] as const)('counts Guangzhou line 3 train changes from %s to %s', (from, to, transfers) => {
+    for (const [start, end] of [
+      [from, to],
+      [to, from],
+    ]) {
+      const trip = route(gz, start, end);
+      expect(names(gz, trip.stationIds)).toEqual([start, '体育西路', end]);
+      expect(names(gz, trip.transferIds)).toEqual(transfers);
+      const groups = routeGroups(trip);
+      expect(groups).toHaveLength(transfers.length + 1);
+      expect(groups.every((group) => group.lineId === 'guangzhou-3号线')).toBe(true);
+    }
+  });
+  it('closes Guangzhou line 11 and connects the Foshan networks', () => {
+    expect(route(gz, '大塘', '龙潭').lineIds).toEqual(['guangzhou-11号线']);
+    expect(route(gz, '龙潭', '大塘').segmentIds).toHaveLength(1);
+    expect(names(gz, route(gz, '石壁', '南庄').transferIds)).toContain('广州南站');
+    expect(route(gz, '西塱', '祖庙').lineIds.every((id) => id === 'guangzhou-广佛线')).toBe(true);
+  });
+  it('includes the complete Foshan line 3 independently of Guangzhou line 3', () => {
+    const trip = route(gz, '顺德学院站', '佛山大学');
+    expect(trip.stationIds).toHaveLength(37);
+    expect(trip.segmentIds).toHaveLength(36);
+    expect(new Set(trip.lineIds)).toEqual(new Set(['guangzhou-佛山3号线']));
+    expect(trip.transferIds).toHaveLength(0);
+    expect(gz.lineById.has('guangzhou-3号线')).toBe(true);
+  });
+  it.each([
+    ['镇安', '桂城', '朝安'],
+    ['大墩', '东平', '世纪莲'],
+    ['亚艺公园', '湾华', '石梁'],
+    ['广教', '北滘公园', '美的'],
+  ])('connects Foshan line 3 from %s via %s to %s', (from, interchange, to) => {
+    expect(gz.city.stations.filter((s) => localisedName(s, 'zh-CN') === interchange)).toHaveLength(
+      1,
+    );
+    for (const [start, end] of [
+      [from, to],
+      [to, from],
+    ]) {
+      const trip = route(gz, start, end);
+      expect(names(gz, trip.stationIds)).toEqual([start, interchange, end]);
+      expect(names(gz, trip.transferIds)).toEqual([interchange]);
+    }
+  });
+  it('does not connect the two separate sections of Guangzhou line 12 directly', () => {
+    const line12 = createNetwork({
+      ...gz.city,
+      segments: gz.city.segments.filter((s) => s.lineId === 'guangzhou-12号线'),
+    });
+    expect(findRoute(line12, id(gz, '广州体育馆'), id(gz, '二沙岛'))).toBeNull();
+    expect(route(gz, '广州体育馆', '二沙岛').transferIds.length).toBeGreaterThan(0);
+  });
+  it.each([sz, gz])('$city.zhName: supports pinyin station search', (network) => {
+    const name = network === sz ? '深圳北站' : '广州南站';
+    const query = network === sz ? 'ShenZhen BeiZhan' : 'GuangZhou NanZhan';
+    expect(searchStations(network, query).map((s) => localisedName(s, 'zh-CN'))).toContain(name);
   });
 });
 
