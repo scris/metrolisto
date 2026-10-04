@@ -161,7 +161,8 @@ describe('language and city data', () => {
   it('supplies English names and official credits for both bundled cities', () => {
     for (const city of cities.filter((city) => ['shanghai', 'beijing'].includes(city.id))) {
       expect(city.attribution).toEqual({ kind: 'official' });
-      expect(contributionLabel(city, 'en-GB')).toBe('Officially maintained');
+      expect(contributionLabel(city, 'zh-CN')).toBe('由应用开发者维护');
+      expect(contributionLabel(city, 'en-GB')).toBe('Maintained by the app developer');
       for (const names of [
         ...city.stations.map((s) => s.names),
         ...city.lines.flatMap((l) => [l.names, l.shortNames]),

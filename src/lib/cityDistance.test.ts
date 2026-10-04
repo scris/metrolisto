@@ -6,10 +6,11 @@ import { validateCity } from './validate';
 
 describe('city distance ordering', () => {
   it.each([
-    ['shanghai', ['shanghai', 'beijing', 'guangzhou', 'shenzhen']],
-    ['beijing', ['beijing', 'shanghai', 'guangzhou', 'shenzhen']],
-    ['shenzhen', ['shenzhen', 'guangzhou', 'shanghai', 'beijing']],
-    ['guangzhou', ['guangzhou', 'shenzhen', 'shanghai', 'beijing']],
+    ['shanghai', ['shanghai', 'hangzhou', 'beijing', 'guangzhou', 'shenzhen']],
+    ['beijing', ['beijing', 'shanghai', 'hangzhou', 'guangzhou', 'shenzhen']],
+    ['shenzhen', ['shenzhen', 'guangzhou', 'hangzhou', 'shanghai', 'beijing']],
+    ['guangzhou', ['guangzhou', 'shenzhen', 'hangzhou', 'shanghai', 'beijing']],
+    ['hangzhou', ['hangzhou', 'shanghai', 'guangzhou', 'shenzhen', 'beijing']],
   ])('orders cities relative to %s without changing the registry', (id, expected) => {
     const original = [...cities];
     expect(

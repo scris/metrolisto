@@ -9,6 +9,7 @@ const sh = createNetwork(cities[0]),
   bj = createNetwork(cities[1]),
   sz = createNetwork(cities.find((c) => c.id === 'shenzhen')!),
   gz = createNetwork(cities.find((c) => c.id === 'guangzhou')!);
+const hz = createNetwork(cities.find((c) => c.id === 'hangzhou')!);
 const id = (network: typeof sh, name: string) =>
   network.city.stations.find((s) => localisedName(s, 'zh-CN') === name)!.id;
 const route = (network: typeof sh, from: string, to: string, via: string[] = []) =>
@@ -96,6 +97,75 @@ describe('complete city networks', () => {
     const duplicate = structuredClone(cities[0]);
     duplicate.stations.push(duplicate.stations[0]);
     expect(() => validateCity(duplicate)).toThrow();
+  });
+});
+
+describe('Hangzhou, Shaoxing and Haining topology', () => {
+  it('includes all three networks and credits scris', () => {
+    expect(hz.city.attribution).toEqual({ kind: 'community', name: 'scris' });
+    expect(hz.city.lines).toHaveLength(15);
+    expect(hz.city.stations).toHaveLength(311);
+    expect(hz.city.segments).toHaveLength(347);
+    expect(names(hz, route(hz, '双桥', '衙前').transferIds)).toEqual(['姑娘桥']);
+    expect(names(hz, route(hz, '南苑', '浙大国际校区').transferIds)).toEqual(['临平南高铁站']);
+    expect(names(hz, route(hz, '凤林', '檀渎').transferIds)).toEqual(['梅山广场']);
+    expect(hz.city.stations.filter((s) => localisedName(s, 'zh-CN') === '奥体中心')).toHaveLength(
+      2,
+    );
+  });
+  it.each([
+    ['3号线', '洪园', '西溪湿地南', '留下', '花坞', 38],
+    ['6号线', '音乐学院', '美院象山', '霞鸣街', '枫桦西路', 36],
+  ])(
+    'deduplicates %s branches and counts changes between the two arms',
+    (line, a, junction, b, trunk, count) => {
+      const lineId = `hangzhou-${line}`;
+      const branchNetwork = createNetwork({
+        ...hz.city,
+        segments: hz.city.segments.filter((s) => s.lineId === lineId),
+      });
+      expect(hz.lineById.get(lineId)!.stationIds).toHaveLength(count);
+      expect(branchNetwork.city.segments).toHaveLength(count - 1);
+      for (const [from, to] of [
+        [a, b],
+        [b, a],
+      ]) {
+        const trip = route(branchNetwork, from, to);
+        expect(names(hz, trip.stationIds)).toEqual([from, junction, to]);
+        expect(names(hz, trip.transferIds)).toEqual([junction]);
+        expect(routeGroups(trip)).toHaveLength(2);
+      }
+      for (const arm of [a, b]) {
+        expect(route(branchNetwork, trunk, arm).transferIds).toHaveLength(0);
+        expect(route(branchNetwork, arm, trunk).transferIds).toHaveLength(0);
+      }
+    },
+  );
+  it('requires a change between the Shaoxing shuttle branch and either main-line direction', () => {
+    const lineId = 'hangzhou-绍兴1号线';
+    expect(hz.lineById.get(lineId)!.stationIds).toHaveLength(33);
+    expect(hz.city.segments.filter((s) => s.lineId === lineId)).toHaveLength(32);
+    expect(names(hz, route(hz, '会展中心', '黄酒小镇').stationIds)).toEqual([
+      '会展中心',
+      '绍兴北站',
+      '大庆寺',
+      '湖西',
+      '绍兴一中',
+      '黄酒小镇',
+    ]);
+    for (const main of ['镜水路', '张墅']) {
+      for (const [from, to] of [
+        ['会展中心', main],
+        [main, '会展中心'],
+      ]) {
+        const trip = route(hz, from, to);
+        expect(names(hz, trip.transferIds)).toEqual(['黄酒小镇']);
+        expect(new Set(trip.lineIds)).toEqual(new Set([lineId]));
+        expect(routeGroups(trip)).toHaveLength(2);
+      }
+    }
+    expect(route(hz, '镜水路', '张墅').transferIds).toHaveLength(0);
+    expect(route(hz, '绍兴北站', '黄酒小镇').transferIds).toHaveLength(0);
   });
 });
 

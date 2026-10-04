@@ -9,7 +9,7 @@
 
 ```ts
 import yourCity from './your-city.json';
-export const cities: CityData[] = [shanghai, beijing, shenzhen, guangzhou, yourCity].map(
+export const cities: CityData[] = [shanghai, beijing, shenzhen, guangzhou, hangzhou, yourCity].map(
   validateCity,
 );
 ```
@@ -66,7 +66,7 @@ pnpm format:check      # 检查城市数据及其余项目文件
 | `updatedAt`         | string                     | 数据日期，如 `2026-10-03`                                    |
 | `description`       | string                     | 运营范围说明                                                 |
 | `descriptionEn`     | string?                    | 英文运营范围说明                                             |
-| `attribution`       | object?                    | 官方维护或具名用户贡献，见下文                               |
+| `attribution`       | object?                    | 由应用开发者维护或具名用户贡献，见下文                       |
 | `center`            | `[number, number]`         | 默认地图视图中心（示意坐标）                                 |
 | `sources`           | `{title, titleEn?, url}[]` | 数据来源，可选英文标题，URL 使用 HTTP(S)                     |
 | `stations`          | Station[]                  | 去重后的站点                                                 |
@@ -132,7 +132,7 @@ pnpm format:check      # 检查城市数据及其余项目文件
 { "kind": "official" }
 ```
 
-表示“官方维护 / Officially maintained”，用于 MetroListo 第一方维护的北京和上海，**不是交通运营方对应用的认证**。
+表示“由应用开发者维护 / Maintained by the app developer”，用于 MetroListo 第一方维护的北京和上海，**不是交通运营方对应用的认证**。
 
 ```json
 { "kind": "community", "name": "Alice" }
