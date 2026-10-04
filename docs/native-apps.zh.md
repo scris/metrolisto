@@ -1,5 +1,7 @@
 # iOS / Android 原生应用开发
 
+[English](native-apps.en.md) | 简体中文
+
 MetroListo 使用 Capacitor 8.5.2 将现有 React 应用打包到 iOS 和 Android。两端共用网页源码、城市数据和路由逻辑。
 
 ## 工程配置

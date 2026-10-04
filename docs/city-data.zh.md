@@ -1,5 +1,7 @@
 # 城市数据协议 v1
 
+[English](city-data.en.md) | 简体中文
+
 全地铁的地图和路由使用同一份、与供应商无关的 `CityData`。TypeScript 定义位于 `src/types.ts`，运行时校验器为 `src/lib/validate.ts` 中的 `validateCity`。
 
 ## 添加城市
@@ -9,9 +11,7 @@
 
 ```ts
 import yourCity from './your-city.json';
-export const cities: CityData[] = [shanghai, beijing, shenzhen, guangzhou, hangzhou, yourCity].map(
-  validateCity,
-);
+export const cities: CityData[] = [shanghai, beijing, shenzhen, yourCity].map(validateCity);
 ```
 
 3. 运行 `pnpm format:city`，再运行 `pnpm format:check`、`pnpm test` 和 `pnpm build`。选择新增城市，检查线路、换乘、终点、支线和环线几何。
@@ -81,6 +81,8 @@ pnpm format:check      # 检查城市数据及其余项目文件
 
 **城市名必须同时提供中文 `zhName` 和英文 `enName`**，与站点采用哪种语言无关。可选 `localName` 提供当地语言名称，其中 `name` 为非空名称，`language` 为有效的 BCP 47 语言标签。当地名不能替代必填的中文名或英文名；校验器检查字段完整性，名称的实际语言与准确性由贡献者核对。
 
+英文城市名 `enName` 使用首字母大写的常规拼写，例如 `Hangzhou`、`Guangzhou`、`Shenzhen`，不使用全大写形式。
+
 以首尔为例，城市名称字段可写为（仅说明协议，不代表已提供首尔线网）：
 
 ```json
@@ -126,6 +128,8 @@ pnpm format:check      # 检查城市数据及其余项目文件
 
 可选 `descriptionEn` 提供英文运营范围，`sources[].titleEn` 提供英文来源标题。线路的 `shortNames` 简称列表采用与 `names` 相同的结构和回退规则，也只需提供一种语言。
 
+城市说明 `description` 和 `descriptionEn` 均不以句号结尾，末尾不添加中文句号 `。` 或英文句号 `.`。
+
 可选 `attribution` 标识数据来源身份：
 
 ```json
@@ -142,7 +146,7 @@ pnpm format:check      # 检查城市数据及其余项目文件
 
 **每座城市只维护一份 `src/data/<城市>.json`**：站点英文名直接写入对应 `stations[]` 对象的 `names` 列表，并标注 `language: "en"`，线路名称、城市名称、贡献者与来源也在同一文件中，无需额外的翻译目录或生成步骤。JSON 必须使用上文的一条记录一行格式，运行 `pnpm format:city` 或 `pnpm format` 整理。
 
-北京、上海必须提供官方英文站名与英文线路名，官方双语线网图来源见 [数据来源](data-sources.md)。这是内置两城的数据质量要求，不是所有城市的协议要求。更新这两城时，转换器从现有城市 JSON 读取已核对名称；新增站点的官方英文名需直接在输出的城市 JSON 中补齐后运行测试，不会拿拼音搜索别名充当英文站名。
+北京、上海必须提供官方英文站名与英文线路名，官方双语线网图来源见 [数据来源](data-sources.zh.md)。这是内置两城的数据质量要求，不是所有城市的协议要求。更新这两城时，转换器从现有城市 JSON 读取已核对名称；新增站点的官方英文名需直接在输出的城市 JSON 中补齐后运行测试，不会拿拼音搜索别名充当英文站名。
 
 ## 站点
 

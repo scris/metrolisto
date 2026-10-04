@@ -6,8 +6,8 @@
   "latitude": 30.2741,
   "longitude": 120.1551,
   "updatedAt": "2026-10-04",
-  "description": "杭州地铁、绍兴地铁（含1号线支线）及杭海城际铁路。",
-  "descriptionEn": "Hangzhou Metro, Shaoxing Metro (including the Line 1 branch) and Hangzhou–Haining Intercity Railway.",
+  "description": "杭州地铁、绍兴地铁（含1号线支线）及杭海城际铁路",
+  "descriptionEn": "Hangzhou Metro, Shaoxing Metro (including the Line 1 branch) and Hangzhou–Haining Intercity Railway",
   "attribution": { "kind": "community", "name": "scris" },
   "center": [1600, 1100],
   "sources": [

@@ -1,15 +1,24 @@
-# 内置城市数据来源
+# 城市数据来源
+
+[English](data-sources.en.md) | 简体中文
 
 快照日期为 2026-10-03，杭州及广州补充于 2026-10-04。运行时使用仓库内的 JSON，不在线请求地图 API。
 
 ## 主要来源
 
+| 数据                                            | 来源                                                                                    |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 上海站名、站点 ID、线路颜色、基础拓扑与示意坐标 | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=3100_drw_shanghai.json)  |
+| 北京站名、站点 ID、线路颜色、基础拓扑与示意坐标 | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=1100_drw_beijing.json)   |
+| 深圳站名、站点 ID、线路颜色、基础拓扑与示意坐标 | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=4403_drw_shenzhen.json)  |
+| 广州站名、站点 ID、线路颜色、基础拓扑与示意坐标 | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=4401_drw_guangzhou.json) |
+
+杭州（含绍兴、海宁）的拓扑、站名、英文名与基础示意坐标来自[高德杭州数据](https://map.amap.com/service/subway?srhdata=3301_drw_hangzhou.json)；绍兴 1 号线支线及 2 号线来自[高德绍兴数据](https://map.amap.com/service/subway?srhdata=3306_drw_shaoxing.json)，新增站点坐标适配到杭州画布。
+
+## 次要来源
+
 | 数据                                             | 来源                                                                                                                                  |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| 上海站名、站点 ID、线路颜色、基础拓扑与示意坐标  | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=3100_drw_shanghai.json)                                                |
-| 北京站名、站点 ID、线路颜色、基础拓扑与示意坐标  | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=1100_drw_beijing.json)                                                 |
-| 深圳站名、站点 ID、线路颜色、基础拓扑与示意坐标  | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=4403_drw_shenzhen.json)                                                |
-| 广州站名、站点 ID、线路颜色、基础拓扑与示意坐标  | [高德公开地铁数据](https://map.amap.com/service/subway?srhdata=4401_drw_guangzhou.json)                                               |
 | 佛山 3 号线站序、站点 ID、英文名、颜色与换乘关系 | [高德公开佛山地铁数据](https://map.amap.com/service/subway?srhdata=4406_drw_foshan.json)                                              |
 | 金山铁路站点                                     | [上海市政府：金山铁路各站信息（2026-03-13）](https://www.shanghai.gov.cn/nw17239/20260313/cc9fe6e3e47a47aca3a55b29cd0fb089.html)      |
 | 金山铁路上海南站、莘庄停站                       | [上海市政府：7 月 1 日起金山铁路部分站车时刻调整](https://www.shanghai.gov.cn/nw17239/20250618/791f004ceee246ff9b6d9635577799c8.html) |
@@ -18,8 +27,6 @@
 | 八角游乐园暂停停靠                               | [北京地铁官网（2026-05-16 公告）](https://www.bjsubway.com/)                                                                          |
 | 通运门暂缓开通                                   | [北京地铁：通运门站服务设施](https://www.bjsubway.com/station/fwss/line6/2014-12-25/465.html)                                         |
 | 亦庄 T1 老观里暂缓开通                           | [北京市政府：亦庄 T1 线](https://www.beijing.gov.cn/renwen/rwzyd/qxdw/lsychmqdd/jkqT1x/202309/t20230927_3268022.html)                 |
-
-杭州（含绍兴、海宁）的拓扑、站名、英文名与基础示意坐标来自[高德杭州数据](https://map.amap.com/service/subway?srhdata=3301_drw_hangzhou.json)；绍兴 1 号线支线及 2 号线来自[高德绍兴数据](https://map.amap.com/service/subway?srhdata=3306_drw_shaoxing.json)，新增站点坐标适配到杭州画布。
 
 ## 整理规则
 
@@ -61,13 +68,13 @@ pnpm build
 
 转换器只在开发时使用，不参与客户端运行。更新时核对补充线路、暂停站点、换乘 ID 映射、分段运营和方向规则，并同步修改 `updatedAt`。对已有站点和区间保持 ID 兼容，避免影响用户历史记录。
 
-转换器直接输出“一条记录一行”的统一城市格式；手工修改后运行 `pnpm format:city`。构建与 PR 格式检查会拒绝全文件压缩或完全展开的版本，详见[城市数据格式规则](city-data.md#必须遵循的-json-格式)。
+转换器直接输出“一条记录一行”的统一城市格式；手工修改后运行 `pnpm format:city`。构建与 PR 格式检查会拒绝全文件压缩或完全展开的版本，详见[城市数据格式规则](city-data.zh.md#必须遵循的-json-格式)。
 
 地图数据及名称的权利归原权利人；此目录保留来源与整理说明，不为第三方数据另行授予许可。正式对外发布时按实际使用范围核实供应商使用条款。
 
 ## 英文名称与贡献者标识
 
-北京、上海由 MetroListo 应用开发者维护；深圳、广州都市圈由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州都市圈由 [scris](https://github.io/scris) 贡献。第一方身份与运营方数据来源是两个不同概念。
+北京、上海由 MetroListo 应用开发者维护；深圳、广州都市圈由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州都市圈由 [scris](https://github.io/scris) 贡献。
 
 英文站名参照运营方双语线网图，保留其专名、方向缩写和英文括注，不按界面语言重新翻译专名：
 
@@ -80,4 +87,4 @@ pnpm build
 
 高德转换器支持上海、北京、深圳和广州的拓扑与坐标更新，保留已核对的名称、别名、城市元数据和线路顺序。北京、上海新增站点或线路缺少官方英文名时会提示补齐，测试会检查双语完整性。其他城市可直接按统一协议贡献 JSON。
 
-用户贡献城市使用 `attribution: { "kind": "community", "name": "贡献者名称" }`，显示“由〈名称〉贡献”。字段要求见 [城市数据协议](city-data.md)。
+用户贡献城市使用 `attribution: { "kind": "community", "name": "贡献者名称" }`，显示“由〈名称〉贡献”。字段要求见 [城市数据协议](city-data.zh.md)。

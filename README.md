@@ -1,96 +1,96 @@
 # MetroListo · 全地铁
 
-用日常通勤，收集一座城市。基于 **pnpm + React 18 + TypeScript + Vite + TDesign Mobile React** 的响应式网页应用，通过 **Capacitor** 支持 iOS 和 Android，产品灵感来自 [线格](https://apps.apple.com/cn/app/id6770010912)。
+English | [简体中文](README.zh.md)
 
-## 本地运行
+Collect a city through your everyday journeys. A responsive web app built with **pnpm + React 18 + TypeScript + Vite + TDesign Mobile React**, with iOS and Android support through **Capacitor**, inspired by [线格](https://apps.apple.com/cn/app/id6770010912).
 
-建议使用 Node.js 22 或更新版本；项目锁定 pnpm 12.8.1。
+## Local development
+
+Node.js 22 or later is recommended. The project pins pnpm 12.8.1.
 
 ```sh
 pnpm install
 pnpm dev
 ```
 
-打开终端显示的本地地址，默认是 `http://localhost:5173`。
+Open the local URL shown in the terminal, which defaults to `http://localhost:5173`.
 
 ```sh
-pnpm test          # 路由、数据完整性、状态累计和备份校验
-pnpm build         # 城市数据格式、TypeScript 检查与生产构建
-pnpm preview       # 预览 dist 产物
-pnpm format:check  # 格式检查
-pnpm format:city   # 城市 JSON 专用格式：一条记录一行
+pnpm test          # Routing, data integrity, cumulative journey state and backup validation
+pnpm build         # City data formatting, TypeScript checks and production build
+pnpm preview       # Preview the dist output
+pnpm format:check  # Check formatting
+pnpm format:city   # Format city JSON with one record per line
 ```
 
-`dist/` 可部署到任意静态站点服务。无需 API Key、数据库或后端。字体随应用打包，浏览器运行时不依赖外部地图接口或字体服务。
+Deploy `dist/` to any static hosting service. No API key, database or backend is required. Fonts are bundled with the app, so the browser does not depend on external map APIs or font services at runtime.
 
 ## iOS / Android
 
-已初始化 Capacitor 8.5.2，应用名称为 **全地铁**。
+Capacitor 8.5.2 is already set up, with **全地铁** as the app name.
 
 ```sh
 pnpm install
-pnpm build              # 构建网页
-pnpm sync:capacitor     # 将已构建的网页和插件同步到 iOS 和 Android
-pnpm build:ios          # 构建网页并同步两端，随后用 Xcode 打开 ios/App/App.xcodeproj
-pnpm build:android      # 构建网页并同步两端，随后用 Android Studio 打开 android/
+pnpm build              # Build the web app
+pnpm sync:capacitor     # Sync the built web assets and plugins to iOS and Android
+pnpm build:ios          # Build and sync both platforms, then open ios/App/App.xcodeproj in Xcode
+pnpm build:android      # Build and sync both platforms, then open android/ in Android Studio
 ```
 
-iOS 使用 Swift Package Manager。环境要求、单平台同步、原生构建和签名说明见 [原生应用开发](docs/native-apps.md)。
+iOS uses Swift Package Manager. See [Native app development](docs/native-apps.en.md) for environment requirements, syncing a single platform, native builds and signing.
 
-## 已实现
+## Features
 
-- 简体中文与英国英语（`en-GB`）界面，自动匹配浏览器语言，并可在数据管理中切换和保存。
-- 北京、上海带“由应用开发者维护”标识并提供官方英文站名；深圳、广州由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州（含绍兴、海宁）由 [scris](https://github.io/scris) 贡献。扩展城市支持具名用户贡献，站点可只提供当地语言或英文名称。
-- 城市名必填中文和英文，可补充当地语言名称（如首尔 / Seoul / 서울）；站点允许只提供英文、中文或当地语言名称。
+- English and Simplified Chinese interfaces, with automatic browser language detection and a saved language setting in Data management.
+- Beijing and Shanghai carry a “Maintained by the app developer” label and include official English station names. Shenzhen and Guangzhou were contributed by [Hashmapw](https://github.com/Hashmapw); Hangzhou, including Shaoxing and Haining, was contributed by [scris](https://github.io/scris). Additional cities support named community contributors, and stations may provide only a local-language or English name.
+- Cities must have both English and Chinese names and may include a local-language name, such as Seoul / 首尔 / 서울. Stations may provide only English, Chinese or a local-language name.
+- Shanghai: **22 lines, 425 unique stations and 520 segments**, including the Airport Link Line, Maglev and Jinshan Railway, including Xinzhuang station.
+- Beijing: **28 lines, 422 unique stations and 514 segments**, including Yizhuang T1 tram, Xijiao Line, Capital Airport Express and Daxing Airport Express; suburban railways are excluded.
+- Shenzhen: **17 lines, 362 unique stations and 426 segments**, including the through-running Line 2/8, the Line 6 branch and Pingshan SkyShuttle; Longhua Tram is excluded.
+- Guangzhou: **22 lines, 365 unique stations and 431 segments**, including APM, Knowledge City Line, Guangfo Line and Foshan Lines 2 and 3.
+- Hangzhou: **15 lines, 311 unique stations and 347 segments**, including Shaoxing Lines 1 and 2 and the Hangzhou–Haining Intercity Railway, with the branches of Hangzhou Lines 3 and 6 and Shaoxing Line 1 fully preserved.
+- An SVG schematic network map with dragging, wheel zoom, pinch zoom, fit-to-network, line filters and station search. Station labels adjust to avoid overlap as you zoom.
+- Choose boarding and alighting stations plus up to three ordered transfer stations. Each selected transfer station must involve an actual change of train. Choose between balanced recommendations and fewest transfers.
+- Preview the complete route and its station lists by leg, then confirm to mark the endpoints, every station passed through, actual transfer stations and travelled segments.
+- Clicking a station records boarding or alighting there without marking any segments. Station details let you remove a single-station mark while keeping visits contributed by other journeys.
+- Stations separately track passing through, transfers, and boarding or alighting. Transfer and boarding/alighting records can coexist; a solid blue mark with an orange indicator means both are present.
+- A journey timeline, line collection progress and record undo. Undo recalculates progress from the remaining records, preserving visits shared with other journeys.
+- Persistence in localStorage, isolated by city, with updates across browser tabs, JSON backup export and merge restore. Invalid records are quarantined and retained in exports without blocking valid records; raw storage that cannot be parsed as a whole is never automatically overwritten.
+- A two-column desktop layout and bottom navigation on mobile. Keyboard users can search and select stations, move the map with arrow keys, zoom with plus/minus, and mark stations with Enter or Space.
 
-- 上海 **22 条线路、425 个独立站点、520 个区间**，包括机场联络线、磁浮线、金山铁路（含莘庄站）。
-- 北京 **28 条线路、422 个独立站点、514 个区间**，包括亦庄 T1 有轨电车、西郊线、首都机场线、大兴机场线；不包括市郊铁路。
-- 深圳 **17 条线路、362 个独立站点、426 个区间**，包括贯通运营的 2/8 号线、6 号线支线及坪山云巴；不包括龙华有轨电车。
-- 广州 **22 条线路、365 个独立站点、431 个区间**，包括 APM 线、知识城线、广佛线及佛山 2、3 号线。
-- 杭州 **15 条线路、311 个独立站点、347 个区间**，包括绍兴 1、2 号线及杭海城际，完整保留杭州 3、6 号线和绍兴 1 号线支线。
-- SVG 扁平变形线网图，可拖动、滚轮缩放、双指缩放、全网适配、线路筛选、站点搜索。站名在缩放时自动避让。
-- 上下车站 + 最多三个有顺序的换乘站；换乘站必须发生实际换车。支持综合推荐和换乘最少两种路径偏好。
-- 先预览完整通路和分段站点，再确认点亮起终点、全部途经站点、实际换乘站与乘车区间。
-- 单击站点仅记录该站上下车，不会点亮区间；站点详情内可快捷取消单站点亮，保留其他行程贡献的足迹。
-- 站点分别保存途经、换乘、上下车状态。同一站的换乘和上下车记录可同时存在；蓝色实心加橙色标记表示两者都有。
-- 足迹时间线、线路收藏进度、撤销记录。撤销后从其余记录重新计算，不会抹掉其他行程共享的足迹。
-- localStorage 持久化，城市间隔离，支持跨标签页更新、JSON 备份导出与合并恢复。无效记录隔离保留并随备份导出，不阻断有效足迹；整体无法解析的原始存储不会被自动覆盖。
-- 桌面双栏与手机底部导航；键盘可搜索选择站点，地图支持方向键、加减号，站点支持 Enter/空格点亮。
+Station counts are deduplicated by unique network ID, so they differ from an operator’s sum of station counts across lines. Branches belong to the same line; parallel segments on different lines are counted separately.
 
-站点数量按线网唯一 ID 去重，不等于运营方按线路累计的站数。支线归入同一线路；不同线路的平行区间分别统计。
+## Adding cities
 
-## 扩展城市
+See the [City data schema](docs/city-data.en.md) for the complete format, a minimal example and the steps to add a city. Copy the [example JSON](docs/city.example.json), fill in stations, lines and adjacent segments, and register it in `src/data/index.ts`. The map, routing algorithm, journey statistics and backups need no changes.
 
-完整格式、最小示例和扩展步骤见 [城市数据协议](docs/city-data.md)。复制 [示例 JSON](docs/city.example.json)，填写站点、线路和相邻区间，再在 `src/data/index.ts` 注册即可。地图、路径算法、足迹统计、备份无需修改。
+Each city’s names, Chinese and English station names, lines, sources and contributor are maintained together in `src/data/<city>.json`, with no separate translation file. Data contributions must run `pnpm format:city` to use the required format of one station, line or segment record per line. Builds and PR workflows check every city JSON file; see the [required formatting rules](docs/city-data.en.md#required-json-format). Full station and line names use language-tagged `names` lists, while abbreviated line names use `shortNames`; each list needs at least one entry. Beijing and Shanghai use the same schema. Future city contributions do not need bilingual station names, but city names must include both Chinese and English.
 
-每座城市的名称、站点中英文名、线路、来源与贡献者统一维护在 `src/data/<城市>.json`，不需要单独的翻译文件。贡献数据必须运行 `pnpm format:city`，采用“一条站点、线路或区间记录一行”的专用格式；构建和 PR 工作流会检查所有城市 JSON，详见[强制格式规则](docs/city-data.md#必须遵循的-json-格式)。站点、线路全称使用带语言标签的 `names` 列表，线路简称使用 `shortNames`，每个列表至少一项即可。北京和上海也使用同一协议；未来贡献城市的站名不必双语齐全，但城市名必须同时提供中文和英文。
+## Data and limitations
 
-## 数据与实现边界
+The bundled data snapshot is dated **2026-10-03**, with additions for Hangzhou and Guangzhou on **2026-10-04**. Base topology and schematic coordinates come from Amap’s public metro data. For supplemented official sources, see [Data sources](docs/data-sources.en.md). Stations that share a name but operate separately keep distinct IDs and are not automatically treated as interchanges.
 
-内置数据快照日期：**2026-10-03**，杭州及广州补充于 **2026-10-04**。基础拓扑和变形坐标来自高德公开地铁数据，金山铁路、亦庄 T1、首都机场线方向根据官方资料补充，详见 [数据来源](docs/data-sources.md)。同名但独立运营的车站保留各自 ID，不会仅因站名相同自动换乘。
+This project records personal travel history. Routing uses adjacent segments and train-change costs, without train timetables, service frequencies, fares, capacity restrictions, service suspensions or precise walking times. The airport lines and Jinshan Railway are also shown as adjacent-station topology, which does not represent the stopping pattern of every train.
 
-本项目是个人出行足迹记录工具。路由按相邻区间和换线成本计算，不含列车时刻、班次、票价、限流、停运或精确步行时间。机场线和金山铁路也按相邻站点拓扑展示，不代表每趟列车的实际停站方案。
+Data is stored in localStorage for **the current browser and site address**. Different devices, browsers or ports do not share records. Export a backup before clearing site data. Cloud sync and offline PWA installation are not yet available. iCloud sync on iOS devices will be developed later.
 
-数据保存在**当前浏览器、当前站点地址**的 localStorage 中；不同设备、浏览器或端口不共享记录。清理网站数据前应导出备份。目前没有云同步，也暂未实现离线安装 PWA。
-
-## 主要文件
+## Key files
 
 ```text
 src/
-  App.tsx                    页面、行程记录与交互
-  components/MetroMap.tsx    SVG 线网、缩放拖动和状态显示
+  App.tsx                    Pages, journey records and interactions
+  components/MetroMap.tsx    SVG network, zooming, dragging and state display
   components/StationPicker.tsx
-  data/                      城市 JSON 和注册入口
-  lib/network.ts             图结构与 Dijkstra 路由
-  lib/storage.ts             记录累计、备份验证和持久化
-  lib/validate.ts            城市数据运行时校验
-  types.ts                   城市、区间、足迹协议
-  styles.css                 TDesign 主题与响应式布局
-scripts/import-amap.mjs       开发期数据转换器
-scripts/format-city-data.mjs  城市数据专用格式器与检查
-capacitor.config.ts           原生应用标识、Web 资源目录和平台配置
-ios/                         Xcode 工程与 Swift Package Manager 配置
-android/                     Android Studio 工程与 Gradle Wrapper
-docs/                        数据协议、最小城市示例与来源
+  data/                      City JSON and registration entry point
+  lib/network.ts             Graph structure and Dijkstra routing
+  lib/storage.ts             Record aggregation, backup validation and persistence
+  lib/validate.ts            Runtime city data validation
+  types.ts                   City, segment and journey data types
+  styles.css                 TDesign theme and responsive layout
+scripts/import-amap.mjs       Development-time data converter
+scripts/format-city-data.mjs  City data formatter and checks
+capacitor.config.ts           Native app identifiers, web asset directory and platform settings
+ios/                         Xcode project and Swift Package Manager configuration
+android/                     Android Studio project and Gradle Wrapper
+docs/                        Data schema, minimal city example and sources
 ```
-

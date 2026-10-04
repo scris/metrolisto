@@ -146,8 +146,8 @@ describe('language and city data', () => {
       ...structuredClone(example),
       attribution: { kind: 'community', name: 'Alice' },
     });
-    expect(contributionLabel(city, 'zh-CN')).toBe('由 Alice 贡献');
-    expect(contributionLabel(city, 'en-GB')).toBe('Contributed by Alice');
+    expect(contributionLabel(city, 'zh-CN')).toBe('由 alice 贡献');
+    expect(contributionLabel(city, 'en-GB')).toBe('Contributed by alice');
     expect(contributionLabel({ attribution: undefined }, 'en-GB')).toBe(
       'Contributor not specified',
     );
