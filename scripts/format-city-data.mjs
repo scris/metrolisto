@@ -10,6 +10,8 @@ const fields = {
     'zhName',
     'enName',
     'localName',
+    'latitude',
+    'longitude',
     'updatedAt',
     'description',
     'descriptionEn',

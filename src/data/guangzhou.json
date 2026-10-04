@@ -3,6 +3,8 @@
   "id": "guangzhou",
   "zhName": "广州",
   "enName": "GUANGZHOU",
+  "latitude": 23.1291,
+  "longitude": 113.2644,
   "updatedAt": "2026-10-04",
   "description": "含APM线、广佛线、佛山2/3号线及知识城线；12号线分段运营",
   "attribution": { "kind": "community", "name": "Hashmapw" },

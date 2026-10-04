@@ -3,6 +3,8 @@
   "id": "beijing",
   "zhName": "北京",
   "enName": "Beijing",
+  "latitude": 39.9042,
+  "longitude": 116.4074,
   "updatedAt": "2026-10-03",
   "description": "含亦庄有轨电车、西郊线及两条机场线，不含市郊铁路",
   "descriptionEn": "Includes Yizhuang T1, Xijiao and both airport lines; excludes suburban rail",

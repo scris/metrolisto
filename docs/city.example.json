@@ -3,6 +3,8 @@
   "id": "example-city",
   "zhName": "示例城市",
   "enName": "EXAMPLE CITY",
+  "latitude": 0,
+  "longitude": 0,
   "updatedAt": "2026-10-03",
   "description": "两条示例线路，在中央公园换乘",
   "attribution": { "kind": "community", "name": "示例贡献者" },

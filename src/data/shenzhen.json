@@ -3,6 +3,8 @@
   "id": "shenzhen",
   "zhName": "深圳",
   "enName": "SHENZHEN",
+  "latitude": 22.5431,
+  "longitude": 114.0579,
   "updatedAt": "2026-10-04",
   "description": "含2/8号线贯通运营、6号线支线与坪山云巴，不含龙华有轨电车",
   "attribution": { "kind": "community", "name": "Hashmapw" },

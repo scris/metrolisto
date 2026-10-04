@@ -6,7 +6,11 @@ import { formatCityData } from './format-city-data.mjs';
 
 const cityConfigs = {
   shanghai: { amapId: '3100' },
-  beijing: { amapId: '1100' },
+  beijing: {
+    amapId: '1100',
+    // Dahongmen's platforms now form one interchange despite separate provider IDs.
+    stationIds: { 110100023282030: '110100023114028' }, // 大红门 (8/10号线)
+  },
   shenzhen: {
     amapId: '4403',
     // Same POI and explicit interchange in Amap, despite separate station IDs.
@@ -157,25 +161,6 @@ function makeCity(input) {
     lines.set(lineId, line);
     for (const edge of current.segments.filter((s) => s.lineId === lineId))
       segments.set(edge.id, edge);
-  }
-  // Dahongmen's platforms now form one interchange despite separate provider IDs.
-  if (id === 'beijing') {
-    const oldId = '110100023282030',
-      stationId = '110100023114028';
-    if (stations.has(oldId) && stations.has(stationId)) {
-      stations.delete(oldId);
-      for (const line of lines.values())
-        line.stationIds = [
-          ...new Set(line.stationIds.map((id) => (id === oldId ? stationId : id))),
-        ];
-      const updated = [...segments.values()];
-      segments.clear();
-      for (const edge of updated) {
-        if (edge.from === oldId) edge.from = stationId;
-        if (edge.to === oldId) edge.to = stationId;
-        addSegment(edge.lineId, edge.from, edge.to, edge.points, edge.oneWay);
-      }
-    }
   }
   const byName = (name) =>
     [...stations.values()].find((s) =>

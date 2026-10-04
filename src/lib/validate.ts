@@ -45,6 +45,15 @@ export function validateCity(value: unknown): CityData {
     fail('基本信息不完整');
   const city = value as unknown as CityData;
   if (
+    typeof city.latitude !== 'number' ||
+    !Number.isFinite(city.latitude) ||
+    Math.abs(city.latitude) > 90 ||
+    typeof city.longitude !== 'number' ||
+    !Number.isFinite(city.longitude) ||
+    Math.abs(city.longitude) > 180
+  )
+    fail('城市经纬度无效');
+  if (
     city.localName !== undefined &&
     (!object(city.localName) || !text(city.localName.name) || !languageTag(city.localName.language))
   )

@@ -45,6 +45,6 @@ export function localisedName(
 export function contributionLabel(city: Pick<CityData, 'attribution'>, locale: Locale): string {
   const credit = city.attribution;
   if (credit?.kind === 'official') return translate(locale, '官方维护');
-  if (credit?.kind === 'community') return translate(locale, '由{0}贡献', credit.name);
+  if (credit?.kind === 'community') return translate(locale, '由 {0} 贡献', credit.name);
   return translate(locale, '贡献者未注明');
 }

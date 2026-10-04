@@ -32,6 +32,7 @@ import {
 import { contributionLabel } from './lib/i18n';
 import { downloadBackup } from './lib/backup';
 import { cities } from './data';
+import { sortCitiesByDistance } from './lib/cityDistance';
 import { createNetwork, findRoute, routeGroups } from './lib/network';
 import {
   getProgress,
@@ -113,6 +114,7 @@ export default function App() {
   const isMobile = useMedia('(max-width: 760px)');
   const isMobileMap = isMobile && page === 'map';
   const city = cities.find((c) => c.id === cityId)!;
+  const sortedCities = useMemo(() => sortCitiesByDistance(cities, city), [city]);
   const network = useMemo(() => createNetwork(city), [city]);
   const journeys = saved.cities[city.id] ?? [];
   const progress = useMemo(() => getProgress(journeys), [journeys]);
@@ -1094,7 +1096,7 @@ export default function App() {
             </div>
             {closeButton(t('关闭城市选择'), () => setCityOpen(false))}
           </div>
-          {cities.map((c) => (
+          {sortedCities.map((c) => (
             <button
               className={`city-option ${c.id === cityId ? 'selected' : ''}`}
               key={c.id}

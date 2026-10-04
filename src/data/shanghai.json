@@ -3,6 +3,8 @@
   "id": "shanghai",
   "zhName": "上海",
   "enName": "Shanghai",
+  "latitude": 31.2304,
+  "longitude": 121.4737,
   "updatedAt": "2026-10-03",
   "description": "含机场联络线、磁浮线与金山铁路",
   "descriptionEn": "Includes the Airport Link Line, Maglev and Jinshan Railway",

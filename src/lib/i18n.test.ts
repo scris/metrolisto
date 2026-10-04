@@ -146,7 +146,7 @@ describe('language and city data', () => {
       ...structuredClone(example),
       attribution: { kind: 'community', name: 'Alice' },
     });
-    expect(contributionLabel(city, 'zh-CN')).toBe('由Alice贡献');
+    expect(contributionLabel(city, 'zh-CN')).toBe('由 Alice 贡献');
     expect(contributionLabel(city, 'en-GB')).toBe('Contributed by Alice');
     expect(contributionLabel({ attribution: undefined }, 'en-GB')).toBe(
       'Contributor not specified',
@@ -185,7 +185,7 @@ describe('language and city data', () => {
     );
   });
   it('substitutes values without interpreting contributor names as templates', () => {
-    expect(translate('en-GB', '由{0}贡献', 'Alice {1}')).toBe('Contributed by Alice {1}');
+    expect(translate('en-GB', '由 {0} 贡献', 'Alice {1}')).toBe('Contributed by Alice {1}');
     expect(
       localisedName(
         {

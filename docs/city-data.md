@@ -55,23 +55,27 @@ pnpm format:check      # 检查城市数据及其余项目文件
 
 ## 顶层字段
 
-| 字段                | 类型                       | 说明                                                |
-| ------------------- | -------------------------- | --------------------------------------------------- |
-| `schemaVersion`     | `1`                        | 协议版本                                            |
-| `id`                | string                     | 稳定标识，使用小写字母、数字、短横线，如 `shanghai` |
-| `zhName` / `enName` | string                     | 中文城市名、英文城市名，两项均必填                  |
-| `localName`         | `{name, language}`?        | 可选当地城市名及 BCP 47 语言标签，如 `서울` / `ko`  |
-| `updatedAt`         | string                     | 数据日期，如 `2026-10-03`                           |
-| `description`       | string                     | 运营范围说明                                        |
-| `descriptionEn`     | string?                    | 英文运营范围说明                                    |
-| `attribution`       | object?                    | 官方维护或具名用户贡献，见下文                      |
-| `center`            | `[number, number]`         | 默认地图视图中心（示意坐标）                        |
-| `sources`           | `{title, titleEn?, url}[]` | 数据来源，可选英文标题，URL 使用 HTTP(S)            |
-| `stations`          | Station[]                  | 去重后的站点                                        |
-| `lines`             | MetroLine[]                | 线路                                                |
-| `segments`          | Segment[]                  | 所有相邻站点区间                                    |
+| 字段                | 类型                       | 说明                                                         |
+| ------------------- | -------------------------- | ------------------------------------------------------------ |
+| `schemaVersion`     | `1`                        | 协议版本                                                     |
+| `id`                | string                     | 稳定标识，使用小写字母、数字、短横线，如 `shanghai`          |
+| `zhName` / `enName` | string                     | 中文城市名、英文城市名，两项均必填                           |
+| `localName`         | `{name, language}`?        | 可选当地城市名及 BCP 47 语言标签，如 `서울` / `ko`           |
+| `latitude`          | number                     | 城市代表位置的 WGS 84 纬度（十进制度），范围 −90～90，必填   |
+| `longitude`         | number                     | 城市代表位置的 WGS 84 经度（十进制度），范围 −180～180，必填 |
+| `updatedAt`         | string                     | 数据日期，如 `2026-10-03`                                    |
+| `description`       | string                     | 运营范围说明                                                 |
+| `descriptionEn`     | string?                    | 英文运营范围说明                                             |
+| `attribution`       | object?                    | 官方维护或具名用户贡献，见下文                               |
+| `center`            | `[number, number]`         | 默认地图视图中心（示意坐标）                                 |
+| `sources`           | `{title, titleEn?, url}[]` | 数据来源，可选英文标题，URL 使用 HTTP(S)                     |
+| `stations`          | Station[]                  | 去重后的站点                                                 |
+| `lines`             | MetroLine[]                | 线路                                                         |
+| `segments`          | Segment[]                  | 所有相邻站点区间                                             |
 
 ## 名称、语言与贡献者
+
+城市选择列表以当前打开的城市为起点，按代表位置之间的球面直线距离由近到远排序，当前城市置顶；切换城市后重新排序。`latitude` / `longitude` 与地图示意坐标 `center`、站点 `x/y` 相互独立。新增城市请填写真实经纬度，示例中的 `0, 0` 仅为占位值。
 
 应用支持 `zh-CN` 和 `en-GB`。首次启动按浏览器语言列表选择支持的语言；其他语言回退到 `en-GB`。在“数据管理 → 语言”可手动切换，选择保存在独立的 `metrolisto.locale.v1` 中，不改变足迹或备份格式。
 
