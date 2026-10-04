@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="132 162 760 560" fill="currentColor">
+  <defs>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="800" r="640">
+      <stop offset=".46" stop-color="#fff" />
+      <stop offset="1" stop-color="#a6a6a6" />
+    </radialGradient>
+    <mask id="fade" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="url(#glow)" />
+    </mask>
+  </defs>
+  <g mask="url(#fade)" stroke="currentColor" stroke-width="18" stroke-linejoin="round">
+    <path d="M328.8 693.4L162.8 596.8A404 404 0 0 1 210.8 530.7L354 658.7A212 212 0 0 0 328.8 693.4Z" />
+    <path d="M397.2 621.8L232.5 366.3A516 516 0 0 1 325.4 318.9L435.3 602.3A212 212 0 0 0 397.2 621.8Z" />
+    <path d="M490.6 589.1L451.4 203.1A600 600 0 0 1 572.6 203.1L533.4 589.1A212 212 0 0 0 490.6 589.1Z" />
+    <path d="M588.7 602.3L698.6 318.9A516 516 0 0 1 791.5 366.3L626.8 621.8A212 212 0 0 0 588.7 602.3Z" />
+    <path d="M670 658.7L813.2 530.7A404 404 0 0 1 861.2 596.8L695.2 693.4A212 212 0 0 0 670 658.7Z" />
+  </g>
+</svg>

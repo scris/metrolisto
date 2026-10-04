@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#2864eb"/><path d="M12 33V16l12 13 12-13v17" fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="15" r="3" fill="#bcebbf"/><circle cx="36" cy="15" r="3" fill="#bcebbf"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="sky" x1=".15" y1="0" x2=".85" y2="1">
+      <stop stop-color="#4a8bff" />
+      <stop offset="1" stop-color="#0a55e2" />
+    </linearGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="32" cy="50.5" r="42">
+      <stop offset=".46" stop-color="#fff" />
+      <stop offset="1" stop-color="#a6a6a6" />
+    </radialGradient>
+    <mask id="fade" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="url(#glow)" />
+    </mask>
+    <clipPath id="tile"><rect width="64" height="64" rx="19" /></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="64" height="64" fill="url(#sky)" />
+    <rect y="39" width="64" height="25" fill="#0a37a0" />
+    <path d="M-2 56.5 66 39.6v4L-2 66.5z" fill="#ffb92e" />
+    <ellipse cx="32" cy="51.5" rx="10.5" ry="5" fill="#fff" stroke="#06297f" stroke-width="2.6" />
+    <g mask="url(#fade)" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round">
+      <path d="M20.17 43.78L8.87 37.36A26.6 26.6 0 0 1 12.36 32.56L21.96 41.33A13.6 13.6 0 0 0 20.17 43.78Z" />
+      <path d="M24.51 39.15L13.17 21.95A34.2 34.2 0 0 1 19.97 18.49L27.21 37.77A13.6 13.6 0 0 0 24.51 39.15Z" />
+      <path d="M30.48 36.98L27.56 10.95A39.8 39.8 0 0 1 36.44 10.95L33.52 36.98A13.6 13.6 0 0 0 30.48 36.98Z" />
+      <path d="M36.79 37.77L44.03 18.49A34.2 34.2 0 0 1 50.83 21.95L39.49 39.15A13.6 13.6 0 0 0 36.79 37.77Z" />
+      <path d="M42.04 41.33L51.64 32.56A26.6 26.6 0 0 1 55.13 37.36L43.83 43.78A13.6 13.6 0 0 0 42.04 41.33Z" />
+    </g>
+  </g>
+</svg>
