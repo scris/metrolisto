@@ -107,9 +107,11 @@ export default function App() {
   const [toast, setToast] = useState<{ text: string; undoId?: string } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [journeyDetail, setJourneyDetail] = useState<Journey | null>(null);
+  const [plannerOpen, setPlannerOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const planner = useRef<HTMLElement>(null);
   const isMobile = useMedia('(max-width: 760px)');
+  const isMobileMap = isMobile && page === 'map';
   const city = cities.find((c) => c.id === cityId)!;
   const network = useMemo(() => createNetwork(city), [city]);
   const journeys = saved.cities[city.id] ?? [];
@@ -140,6 +142,13 @@ export default function App() {
     return { start, end };
   }, [city]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle('mobile-map-active', isMobileMap);
+    return () => document.documentElement.classList.remove('mobile-map-active');
+  }, [isMobileMap]);
+  useEffect(() => {
+    if (!isMobileMap) setPlannerOpen(false);
+  }, [isMobileMap]);
   useEffect(() => {
     setToast(null);
   }, [locale]);
@@ -224,7 +233,8 @@ export default function App() {
     kind === 'from' ? setFrom(id) : setTo(id);
     invalidate();
     setPage('map');
-    planner.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (isMobile) setPlannerOpen(true);
+    else planner.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
   const lightStation = (s: Station) => {
     if (progress.stations.get(s.id)?.visited) {
@@ -298,6 +308,7 @@ export default function App() {
       setFrom('');
       setTo('');
       setVia([]);
+      setPlannerOpen(false);
     }
   };
   const useSuggestion = () => {
@@ -430,8 +441,191 @@ export default function App() {
     </section>
   );
 
+  const journeyPlanner = (
+    <section
+      className={isMobile ? 'sheet planner planner-sheet' : 'card planner'}
+      ref={planner}
+      role={isMobile ? 'dialog' : undefined}
+      aria-modal={isMobile ? true : undefined}
+      aria-label={isMobile ? t('记录一段旅程') : undefined}
+    >
+      <div className={isMobile ? 'planner-head sheet-head' : 'planner-head'}>
+        <div>
+          <h2>{t('记录一段旅程')}</h2>
+          <p>{t('先预览路线，再确认点亮沿途')}</p>
+        </div>
+        {isMobile && closeButton(t('关闭旅程记录'), () => setPlannerOpen(false))}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          planRoute();
+        }}
+      >
+        <div className="route-form">
+          <div className="route-row">
+            <i className="start" />
+            <div>
+              <label>{t('上车站')}</label>
+              <StationPicker
+                network={network}
+                value={from}
+                onChange={(id) => {
+                  setFrom(id);
+                  invalidate();
+                }}
+                label={t('上车站')}
+                placeholder={t('从哪一站出发')}
+              />
+            </div>
+          </div>
+          {via.map((id, i) => (
+            <div className="route-row" key={i}>
+              <i className="via" />
+              <div>
+                <label>
+                  {t('换乘站')}
+                  {i + 1}
+                </label>
+                <StationPicker
+                  network={network}
+                  value={id}
+                  transferOnly
+                  onChange={(next) => {
+                    setVia((v) => v.map((s, j) => (j === i ? next : s)));
+                    invalidate();
+                  }}
+                  label={t('换乘站{0}', i + 1)}
+                  placeholder={t('选择换乘站点')}
+                />
+              </div>
+              <button
+                type="button"
+                className="remove"
+                aria-label={t('移除换乘站{0}', i + 1)}
+                onClick={() => {
+                  setVia((v) => v.filter((_, j) => j !== i));
+                  invalidate();
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+          <div className="route-row">
+            <i className="end" />
+            <div>
+              <label>{t('下车站')}</label>
+              <StationPicker
+                network={network}
+                value={to}
+                onChange={(id) => {
+                  setTo(id);
+                  invalidate();
+                }}
+                label={t('下车站')}
+                placeholder={t('在哪一站停下')}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            className="swap"
+            aria-label={t('交换上车站和下车站')}
+            onClick={() => {
+              setFrom(to);
+              setTo(from);
+              setVia([...via].reverse());
+              invalidate();
+            }}
+          >
+            <ArrowDownUp size={16} />
+          </button>
+        </div>
+        <div className="route-options">
+          <button
+            type="button"
+            className="link-btn"
+            disabled={via.length >= 3}
+            onClick={() => {
+              setVia([...via, '']);
+              invalidate();
+            }}
+          >
+            <Plus size={15} />
+            {t('添加换乘站')}
+          </button>
+          <Segmented
+            className="pref-seg"
+            value={preference}
+            options={[
+              { value: 'balanced', label: t('综合推荐') },
+              { value: 'transfers', label: t('换乘最少') },
+            ]}
+            onChange={({ value }) => {
+              setPreference(value as typeof preference);
+              invalidate();
+            }}
+          />
+        </div>
+        {routeError && (
+          <p className="form-error" role="alert">
+            <AlertCircle size={14} />
+            {t(routeError)}
+          </p>
+        )}
+        {!preview && (
+          <Button block theme="primary" type="submit" className="plan-btn">
+            <RouteIcon size={17} />
+            {t('预览行程路线')}
+          </Button>
+        )}
+      </form>
+      {preview ? (
+        <div className="route-preview">
+          <div className="preview-head">
+            <span>
+              <CheckCircle2 size={15} />
+              {t('通路已找到')}
+            </span>
+            <b>
+              {t('{0} 站 · 换乘次数：{1}', preview.stationIds.length, preview.transferIds.length)}
+            </b>
+          </div>
+          <div className="itinerary">
+            {routeGroups(preview).map((group, i) => (
+              <div className="leg" key={i}>
+                <i style={{ background: network.lineById.get(group.lineId)!.color }} />
+                <div>
+                  <strong>
+                    {displayName(group.from)} <ArrowRight size={13} /> {displayName(group.to)}
+                  </strong>
+                  <small>
+                    {name(network.lineById.get(group.lineId)!)} · {group.stops}{' '}
+                    {locale === 'en-GB' && group.stops === 1 ? 'section' : t('个区间')}
+                  </small>
+                  <details>
+                    <summary>{t('查看沿途站点')}</summary>
+                    <p>{group.stationIds.map(displayName).join(' → ')}</p>
+                  </details>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button block theme="primary" className="plan-btn" onClick={confirmRoute}>
+            <Sparkles size={17} />
+            {t('确认行程，点亮沿途')}
+          </Button>
+          <p className="preview-note">{t('确认后记录上下车站、换乘站与全部途经区间')}</p>
+        </div>
+      ) : (
+        <p className="planner-tip">{t('最多可添加三个换乘站，换乘站需实际换车')}</p>
+      )}
+    </section>
+  );
+
   return (
-    <div className="app">
+    <div className={isMobileMap ? 'app mobile-map' : 'app'}>
       {!isMobile && (
         <aside className="rail">
           <a
@@ -515,12 +709,14 @@ export default function App() {
           </div>
         </header>
         <main className="page" key={page}>
-          <div className="page-head">
-            <div>
-              <h1>{pageCopy.title}</h1>
-              <p>{pageCopy.sub}</p>
+          {(!isMobile || page !== 'map') && (
+            <div className="page-head">
+              <div>
+                <h1>{pageCopy.title}</h1>
+                <p>{pageCopy.sub}</p>
+              </div>
             </div>
-          </div>
+          )}
           {(storageError || !!(saved.quarantined?.length ?? 0)) && (
             <div className="banner" role="alert">
               <AlertCircle size={18} />
@@ -626,6 +822,7 @@ export default function App() {
                   manualStationIds={manualStationIds}
                   onUnlightStation={unlightStation}
                   onSetEndpoint={setEndpoint}
+                  onAddJourney={isMobile ? () => setPlannerOpen(true) : undefined}
                 />
                 <div className="map-foot">
                   <div className="legend" aria-label={t('足迹图例')}>
@@ -676,190 +873,13 @@ export default function App() {
                   ))}
                 </div>
               </section>
-              <aside className="side">
-                <section className="card planner" ref={planner}>
-                  <div className="planner-head">
-                    <div>
-                      <h2>{t('记录一段旅程')}</h2>
-                      <p>{t('先预览路线，再确认点亮沿途')}</p>
-                    </div>
-                  </div>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      planRoute();
-                    }}
-                  >
-                    <div className="route-form">
-                      <div className="route-row">
-                        <i className="start" />
-                        <div>
-                          <label>{t('上车站')}</label>
-                          <StationPicker
-                            network={network}
-                            value={from}
-                            onChange={(id) => {
-                              setFrom(id);
-                              invalidate();
-                            }}
-                            label={t('上车站')}
-                            placeholder={t('从哪一站出发')}
-                          />
-                        </div>
-                      </div>
-                      {via.map((id, i) => (
-                        <div className="route-row" key={i}>
-                          <i className="via" />
-                          <div>
-                            <label>
-                              {t('换乘站')}
-                              {i + 1}
-                            </label>
-                            <StationPicker
-                              network={network}
-                              value={id}
-                              transferOnly
-                              onChange={(next) => {
-                                setVia((v) => v.map((s, j) => (j === i ? next : s)));
-                                invalidate();
-                              }}
-                              label={t('换乘站{0}', i + 1)}
-                              placeholder={t('选择换乘站点')}
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            className="remove"
-                            aria-label={t('移除换乘站{0}', i + 1)}
-                            onClick={() => {
-                              setVia((v) => v.filter((_, j) => j !== i));
-                              invalidate();
-                            }}
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="route-row">
-                        <i className="end" />
-                        <div>
-                          <label>{t('下车站')}</label>
-                          <StationPicker
-                            network={network}
-                            value={to}
-                            onChange={(id) => {
-                              setTo(id);
-                              invalidate();
-                            }}
-                            label={t('下车站')}
-                            placeholder={t('在哪一站停下')}
-                          />
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className="swap"
-                        aria-label={t('交换上车站和下车站')}
-                        onClick={() => {
-                          setFrom(to);
-                          setTo(from);
-                          setVia([...via].reverse());
-                          invalidate();
-                        }}
-                      >
-                        <ArrowDownUp size={16} />
-                      </button>
-                    </div>
-                    <div className="route-options">
-                      <button
-                        type="button"
-                        className="link-btn"
-                        disabled={via.length >= 3}
-                        onClick={() => {
-                          setVia([...via, '']);
-                          invalidate();
-                        }}
-                      >
-                        <Plus size={15} />
-                        {t('添加换乘站')}
-                      </button>
-                      <Segmented
-                        className="pref-seg"
-                        value={preference}
-                        options={[
-                          { value: 'balanced', label: t('综合推荐') },
-                          { value: 'transfers', label: t('换乘最少') },
-                        ]}
-                        onChange={({ value }) => {
-                          setPreference(value as typeof preference);
-                          invalidate();
-                        }}
-                      />
-                    </div>
-                    {routeError && (
-                      <p className="form-error" role="alert">
-                        <AlertCircle size={14} />
-                        {t(routeError)}
-                      </p>
-                    )}
-                    {!preview && (
-                      <Button block theme="primary" type="submit" className="plan-btn">
-                        <RouteIcon size={17} />
-                        {t('预览行程路线')}
-                      </Button>
-                    )}
-                  </form>
-                  {preview ? (
-                    <div className="route-preview">
-                      <div className="preview-head">
-                        <span>
-                          <CheckCircle2 size={15} />
-                          {t('通路已找到')}
-                        </span>
-                        <b>
-                          {t(
-                            '{0} 站 · 换乘次数：{1}',
-                            preview.stationIds.length,
-                            preview.transferIds.length,
-                          )}
-                        </b>
-                      </div>
-                      <div className="itinerary">
-                        {routeGroups(preview).map((group, i) => (
-                          <div className="leg" key={i}>
-                            <i style={{ background: network.lineById.get(group.lineId)!.color }} />
-                            <div>
-                              <strong>
-                                {displayName(group.from)} <ArrowRight size={13} />{' '}
-                                {displayName(group.to)}
-                              </strong>
-                              <small>
-                                {name(network.lineById.get(group.lineId)!)} · {group.stops}{' '}
-                                {locale === 'en-GB' && group.stops === 1 ? 'section' : t('个区间')}
-                              </small>
-                              <details>
-                                <summary>{t('查看沿途站点')}</summary>
-                                <p>{group.stationIds.map(displayName).join(' → ')}</p>
-                              </details>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <Button block theme="primary" className="plan-btn" onClick={confirmRoute}>
-                        <Sparkles size={17} />
-                        {t('确认行程，点亮沿途')}
-                      </Button>
-                      <p className="preview-note">
-                        {t('确认后记录上下车站、换乘站与全部途经区间')}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="planner-tip">{t('最多可添加三个换乘站，换乘站需实际换车')}</p>
-                  )}
-                </section>
-                {hero}
-              </aside>
-              {showSuggestion && (
+              {!isMobile && (
+                <aside className="side">
+                  {journeyPlanner}
+                  {hero}
+                </aside>
+              )}
+              {!isMobile && showSuggestion && (
                 <section className="card suggest">
                   <span className="suggest-icon">
                     <TrainFront size={20} />
@@ -1017,16 +1037,18 @@ export default function App() {
               </div>
             </section>
           )}
-          <footer className="footer">
-            <span>{t('全地铁 MetroListo · 从一站，到一城。')}</span>
-            <span>
-              {t('示意线网，非实时导航')}
-              <button onClick={() => setHelpOpen(true)}>
-                {t('数据说明')}
-                <ArrowUpRight size={13} />
-              </button>
-            </span>
-          </footer>
+          {(!isMobile || page !== 'map') && (
+            <footer className="footer">
+              <span>{t('全地铁 MetroListo · 从一站，到一城。')}</span>
+              <span>
+                {t('示意线网，非实时导航')}
+                <button onClick={() => setHelpOpen(true)}>
+                  {t('数据说明')}
+                  <ArrowUpRight size={13} />
+                </button>
+              </span>
+            </footer>
+          )}
         </main>
       </div>
       {isMobile && (
@@ -1045,6 +1067,17 @@ export default function App() {
             </TabBarItem>
           ))}
         </TabBar>
+      )}
+      {isMobileMap && (
+        <Popup
+          visible={plannerOpen}
+          placement="bottom"
+          onClose={() => setPlannerOpen(false)}
+          destroyOnClose
+          className="app-popup journey-popup"
+        >
+          {journeyPlanner}
+        </Popup>
       )}
       <Popup
         visible={cityOpen}

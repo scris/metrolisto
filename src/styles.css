@@ -2154,6 +2154,77 @@ svg {
   html {
     font-size: 16px;
   }
+  html.mobile-map-active,
+  html.mobile-map-active body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .mobile-map {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .mobile-map .app-body {
+    height: 100%;
+    min-height: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+  .mobile-map .topbar {
+    flex-shrink: 0;
+  }
+  .mobile-map .page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 12px 12px 0;
+    overflow: hidden;
+  }
+  .mobile-map .explore,
+  .mobile-map .map-card {
+    flex: 1;
+    min-height: 0;
+  }
+  .mobile-map .map-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-map .map-frame {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+  .mobile-map .map-foot,
+  .mobile-map .line-strip {
+    flex-shrink: 0;
+  }
+  .mobile-map .banner {
+    flex-shrink: 0;
+    max-height: 25dvh;
+    overflow-y: auto;
+  }
+  .map-ctl .ctl.add-journey {
+    width: 48px;
+    height: 48px;
+    background: var(--brand);
+    color: #fff;
+    box-shadow: var(--shadow-brand);
+  }
+  .map-ctl .ctl.add-journey:hover {
+    background: var(--brand-hover);
+  }
+  .journey-popup.t-popup {
+    max-height: 88dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 28px 28px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .planner-sheet .planner-head .icon-btn {
+    flex-shrink: 0;
+  }
   .app-body {
     margin-left: 0;
     width: 100%;

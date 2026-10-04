@@ -16,6 +16,7 @@ interface Props {
   manualStationIds: Set<string>;
   onUnlightStation: (station: Station) => void;
   onSetEndpoint: (id: string, kind: 'from' | 'to') => void;
+  onAddJourney?: () => void;
 }
 
 const COLOR = {
@@ -38,6 +39,7 @@ export default function MetroMap({
   manualStationIds,
   onUnlightStation,
   onSetEndpoint,
+  onAddJourney,
 }: Props) {
   const { locale, t, name } = useLocale();
   const { city } = network;
@@ -59,6 +61,10 @@ export default function MetroMap({
   const routeEdges = useMemo(() => new Set(route?.segmentIds), [route]);
   const routeStations = useMemo(() => new Set(route?.stationIds), [route]);
   const scale = view.width / size.width;
+
+  useEffect(() => {
+    if (onAddJourney) setExpanded(false);
+  }, [onAddJourney]);
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -552,14 +558,26 @@ export default function MetroMap({
         </div>
       )}
       <div className="map-ctl">
-        <button
-          className="ctl"
-          aria-label={expanded ? t('退出全屏地图') : t('展开地图')}
-          title={expanded ? t('退出全屏') : t('全屏')}
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? <X size={18} /> : <Maximize2 size={16} />}
-        </button>
+        {onAddJourney ? (
+          <button
+            className="ctl add-journey"
+            aria-label={t('记录一段旅程')}
+            aria-haspopup="dialog"
+            title={t('记录一段旅程')}
+            onClick={onAddJourney}
+          >
+            <Plus size={24} />
+          </button>
+        ) : (
+          <button
+            className="ctl"
+            aria-label={expanded ? t('退出全屏地图') : t('展开地图')}
+            title={expanded ? t('退出全屏') : t('全屏')}
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <X size={18} /> : <Maximize2 size={16} />}
+          </button>
+        )}
         <button
           className={labelsOn ? 'ctl active' : 'ctl'}
           aria-pressed={labelsOn}
