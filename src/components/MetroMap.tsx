@@ -2,7 +2,7 @@ import { useLocale } from './LocaleProvider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Focus, LocateFixed, Maximize2, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { isTransferStation, type Network } from '../lib/network';
-import { cubicArrow, cubicPath } from '../lib/mapGeometry';
+import { cubicArrow, cubicPath, stationSpans, type StationSpan } from '../lib/mapGeometry';
 import type { Progress, Route, Station } from '../types';
 
 interface Props {
@@ -28,6 +28,69 @@ const COLOR = {
   halo: '#fafbfc',
 };
 
+function StationMarker({
+  station,
+  span,
+  r,
+  ...paint
+}: {
+  station: Station;
+  span?: StationSpan;
+  r: number;
+  fill: string;
+  stroke?: string;
+  strokeWidth?: number;
+  opacity?: number;
+}) {
+  if (!span || !span.length)
+    return (
+      <circle
+        cx={span?.center[0] ?? station.x}
+        cy={span?.center[1] ?? station.y}
+        r={r}
+        {...paint}
+      />
+    );
+  const dx = span.to[0] - span.from[0],
+    dy = span.to[1] - span.from[1];
+  const branches = span.points.flatMap((point) => {
+    const along = Math.max(
+      0,
+      Math.min(
+        1,
+        ((point[0] - span.from[0]) * dx + (point[1] - span.from[1]) * dy) / span.length ** 2,
+      ),
+    );
+    const nearest = [span.from[0] + along * dx, span.from[1] + along * dy];
+    return Math.hypot(point[0] - nearest[0], point[1] - nearest[1]) > 0.1
+      ? [`M ${nearest.join(' ')} L ${point.join(' ')}`]
+      : [];
+  });
+  const path = [`M ${span.from.join(' ')} L ${span.to.join(' ')}`, ...branches].join(' ');
+  return (
+    <g opacity={paint.opacity}>
+      {paint.stroke && (
+        <path
+          d={path}
+          fill="none"
+          stroke={paint.stroke}
+          strokeWidth={r * 2 + (paint.strokeWidth ?? 0)}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+      <path
+        d={path}
+        fill="none"
+        stroke={paint.fill}
+        strokeWidth={r * 2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
 export default function MetroMap({
   network,
   progress,
@@ -43,6 +106,7 @@ export default function MetroMap({
 }: Props) {
   const { locale, t, name } = useLocale();
   const { city } = network;
+  const spans = useMemo(() => stationSpans(city), [city]);
   const frame = useRef<HTMLDivElement>(null),
     svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 900, height: 570 });
@@ -174,12 +238,18 @@ export default function MetroMap({
               0,
             ) * fontSize,
           h = fontSize * 1.3,
-          gap = 12;
+          gap = 12 + (spans.get(s.id)?.padding ?? 0);
+        const span = spans.get(s.id),
+          [cx, cy] = span?.center ?? [s.x, s.y],
+          minX = span ? Math.min(span.from[0], span.to[0]) : s.x,
+          maxX = span ? Math.max(span.from[0], span.to[0]) : s.x,
+          minY = span ? Math.min(span.from[1], span.to[1]) : s.y,
+          maxY = span ? Math.max(span.from[1], span.to[1]) : s.y;
         const directions = [
-          { x: s.x + gap, y: s.y - h / 2 },
-          { x: s.x - w - gap, y: s.y - h / 2 },
-          { x: s.x - w / 2, y: s.y - h - gap },
-          { x: s.x - w / 2, y: s.y + gap },
+          { x: maxX + gap, y: cy - h / 2 },
+          { x: minX - w - gap, y: cy - h / 2 },
+          { x: cx - w / 2, y: minY - h - gap },
+          { x: cx - w / 2, y: maxY + gap },
         ];
         if ((s.label ?? 0) % 2) directions.reverse();
         const box = directions.find(
@@ -210,6 +280,7 @@ export default function MetroMap({
     progress,
     routeStations,
     network,
+    spans,
     height,
     scale,
     locale,
@@ -409,6 +480,8 @@ export default function MetroMap({
         </g>
         <g>
           {city.stations.map((s) => {
+            const span = spans.get(s.id),
+              [cx, cy] = span?.center ?? [s.x, s.y];
             const state = progress.stations.get(s.id),
               interchange = isTransferStation(network, s.id);
             const inRoute = routeStations.has(s.id),
@@ -456,25 +529,36 @@ export default function MetroMap({
                         ? t(' · 已途经')
                         : ''}
                 </title>
-                <circle cx={s.x} cy={s.y} r={Math.max(r + 7, scale * 9)} fill="transparent" />
+                <StationMarker
+                  station={s}
+                  span={span}
+                  r={Math.max(r + 7, scale * 9)}
+                  fill="transparent"
+                />
                 {selected?.id === s.id && (
-                  <circle cx={s.x} cy={s.y} r="24" fill={COLOR.visited} opacity=".12" />
+                  <StationMarker
+                    station={s}
+                    span={span}
+                    r={24}
+                    fill={COLOR.visited}
+                    opacity={0.12}
+                  />
                 )}
-                <circle
-                  cx={s.x}
-                  cy={s.y}
+                <StationMarker
+                  station={s}
+                  span={span}
                   r={r}
                   fill={state?.visited ? COLOR.visited : state?.transferred ? '#fff1e9' : 'white'}
                   stroke={inRoute ? COLOR.visited : color}
                   strokeWidth={interchange ? 2.4 : 1.8}
                 />
                 {interchange && (
-                  <circle cx={s.x} cy={s.y} r="3.1" fill={state?.visited ? 'white' : color} />
+                  <circle cx={cx} cy={cy} r="3.1" fill={state?.visited ? 'white' : color} />
                 )}
                 {state?.visited && state.transferred && (
                   <circle
-                    cx={s.x + 6}
-                    cy={s.y - 6}
+                    cx={cx + 6}
+                    cy={cy - 6}
                     r="3.4"
                     fill={COLOR.transferred}
                     stroke="white"

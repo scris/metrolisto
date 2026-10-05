@@ -136,7 +136,7 @@ Optional `attribution` identifies who provided or maintains the data:
 { "kind": "official" }
 ```
 
-This displays “Maintained by the app developer” and is used for Beijing and Shanghai, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
+This displays “Maintained by the app developer” and is used for Beijing, Shanghai and London, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
 
 ```json
 { "kind": "community", "name": "Alice" }
@@ -144,7 +144,7 @@ This displays “Maintained by the app developer” and is used for Beijing and 
 
 This displays “Contributed by Alice”. `name` must be a non-empty string, and the interface does not label community users as maintainers. Older data without this field displays “Contributor not specified” and is not automatically classified as official.
 
-**Maintain just one `src/data/<city>.json` per city.** Put English station names directly in each `stations[]` object’s `names` list with `language: "en"`. Line names, city names, contributors and sources belong in the same file, without an extra translation directory or generation step. JSON must use the one-record-per-line format above; run `pnpm format:city` or `pnpm format` to apply it.
+**Maintain just one `src/data/<city>.json` per city.** Put station names directly in each `stations[]` object’s `names` list with the corresponding language tag, such as `en` for English or `nl` for Dutch. Line names, city names, contributors and sources belong in the same file, without an extra translation directory or generation step. JSON must use the one-record-per-line format above; run `pnpm format:city` or `pnpm format` to apply it.
 
 Beijing and Shanghai must provide official English station and line names. See [Data sources](data-sources.en.md) for the official bilingual maps. This is a data quality requirement for those two bundled cities, rather than a schema requirement for all cities. When updating them, the converter reads verified names from the existing city JSON. Add official English names for new stations directly to the output city JSON before running tests; Pinyin search aliases are not used as English station names.
 
@@ -179,14 +179,19 @@ interface MetroLine {
   names: Names; // Full line names in at least one language
   shortNames: Names; // Abbreviated line names in at least one language
   color: string; // #RRGGBB
-  kind: 'metro' | 'rail' | 'tram' | 'maglev';
+  kind: 'metro' | 'rail' | 'tram' | 'maglev' | 'cable-car';
   stationIds: string[];
+  services?: { id: string; stationIds: string[]; oneWay?: boolean }[];
 }
 ```
 
 `stationIds` only describes which stations belong to a line, for filtering and statistics. **Its array order does not implicitly create connections.** Explicitly define every connection in `segments` below, so loops, branches and one-way lines need no special plugins.
 
 Branches of the same line share a `lineId` and are not treated as transfers between different lines. Declare any required train changes within a line using `sameLineTransfers` below.
+
+`cable-car` represents a cable car line. Optional `services` describes ordered direct passenger train paths when local branch rules cannot distinguish different services sharing the same tracks. Each service has a stable ID and at least two stops belonging to the line. Reverse travel is allowed unless `oneWay: true`. Repeated stops are allowed for street loops; continuation follows the next occurrence in the service path, so a train cannot jump between different visits to a station. Every permitted direction of every line segment must be covered. Switching service paths counts as a train change even when the `lineId` stays the same. Do not add frequencies, short workings or temporary closures as separate collection lines.
+
+For example, Windrush services from Highbury & Islington do not continue to Clapham Junction; that branch starts at Dalston Junction. A route must change services somewhere on the shared trunk. This cannot be expressed by a rule involving only the two segments at Surrey Quays. Services also retain Croydon tram continuity through a second visit to East Croydon. When `services` is absent, segment adjacency and `sameLineTransfers` retain their existing behavior.
 
 ## Segments
 
@@ -202,7 +207,7 @@ interface Segment {
 ```
 
 - Segments are bidirectional by default. `oneWay: true` permits travel only from `from` to `to`.
-- `points` contains the segment’s SVG polyline coordinates, including both endpoints. Without it, the station coordinates are connected directly.
+- `points` contains the segment’s SVG polyline coordinates, including both drawing endpoints. Without it, the station coordinates are connected directly. Drawing endpoints may be offset from the station anchor to keep shared-track lines parallel. Adjacent segments on a continuous path must meet at the same drawing endpoint; junctions may have separate directional endpoints. Station markers connect the actual drawing endpoints, using narrow branches at complex interchanges. An offset single-line stop does not span a passing line that does not stop there. Connections and routing still use `from`/`to` station IDs.
 - A loop must explicitly include a segment from the last station to the first.
 - Branches must include separate segments from the junction to each branch. Do not invent connections between branch termini.
 - Write shared trunk segments on the same line only once. When different lines share tracks, retain each line’s own segments; travel progress is counted separately.
@@ -210,13 +215,13 @@ interface Segment {
 
 ## Routing and state
 
-Routing uses Dijkstra’s algorithm, with state comprising the current station, the arrival segment and the ordered transfer constraints already satisfied. Balanced recommendations assign a cost of 1 per segment and an extra cost of 4 per train change. Fewest-transfers mode uses a train-change cost greater than the network’s total segment count. Selected transfer stations must involve an actual train change; merely passing through does not satisfy the constraint.
+Routing uses Dijkstra’s algorithm, with state comprising the current station, the arrival segment, the position in a direct service path where provided, and the ordered transfer constraints already satisfied. Balanced recommendations assign a cost of 1 per segment and an extra cost of 4 per train change. Fewest-transfers mode uses a train-change cost greater than the network’s total segment count. Selected transfer stations must involve an actual train change; merely passing through does not satisfy the constraint.
 
 Each journey stores ordered `stationIds`, `segmentIds`, `lineIds` and `transferIds`. The endpoints count as boarding or alighting, actual train-change stations count as transfers, and the rest count as passing through. Multiple records are combined by union, with transfer and boarding/alighting states retained separately.
 
-Built-in validation rejects duplicate IDs, invalid coordinates, missing references, invalid colours, segments inconsistent with line membership, and similar errors. Tests also check that all stations are reachable in both directions. If a new city has genuinely disconnected operating networks, such as Shenzhen’s Pingshan SkyShuttle, assert connectivity by connected component in the connectivity tests. Routes between networks correctly return “No route found”.
+Built-in validation rejects duplicate IDs, invalid coordinates, missing references, invalid colours, segments inconsistent with line membership, and similar errors. Tests also check that all stations are reachable in both directions. If a new city has genuinely disconnected operating networks, such as Shenzhen’s Pingshan SkyShuttle or London’s Cable Car, assert connectivity by connected component in the connectivity tests. Routes between networks correctly return “No route found”.
 
-Optional `sameLineTransfers` is an array of segment ID pairs. Each pair must identify two adjacent segments on the same line and means that changing trains between them also counts as a transfer. For example, it can represent travel between the two branch directions at Longxi Road on Shanghai Line 10, while trunk-to-branch journeys still count as direct. Line collection progress remains grouped by `lineId`; route search retains the arrival segment in its state to detect train changes.
+Optional `sameLineTransfers` is an array of segment ID pairs. Each pair must identify two adjacent segments on the same line and means that changing trains between them also counts as a transfer. For example, it can represent travel between the two branch directions at Longxi Road on Shanghai Line 10, while trunk-to-branch journeys still count as direct. Line collection progress remains grouped by `lineId`; route search retains the arrival segment and direct service position in its state to detect train changes. Backup validation also checks service continuity and preserves valid recorded change stations on shared trunks.
 
 Backups may include a `quarantined` array, with each entry storing `cityId`, the original `value` and a validation failure `reason`. Reading and importing isolate invalid records, unknown cities and invalid city record lists so that other valid records remain usable and can be saved. Quarantined data is retained in exports and deduplicated on repeated import, but does not count towards travel progress. Unparseable JSON or an incorrect overall version still prevents overwriting the original storage.
 

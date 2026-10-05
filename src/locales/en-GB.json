@@ -6,6 +6,7 @@
   "市域铁路": "Suburban rail",
   "有轨电车": "Tram",
   "磁浮列车": "Maglev",
+  "缆车": "Cable car",
   "另一个页面的记录无法读取，请检查备份。": "Records from another tab could not be read. Please check your backup.",
   "原始记录无法读取，请先在数据管理中导出并恢复备份。": "The original records could not be read. Export and restore a backup in Data management first.",
   "保存失败：浏览器存储不可用或已满。请导出备份，释放空间后重试。": "Could not save: browser storage is unavailable or full. Export a backup, free some space and try again.",

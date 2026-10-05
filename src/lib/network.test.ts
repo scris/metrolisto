@@ -44,11 +44,13 @@ describe('complete city networks', () => {
     ).toBe(false);
   });
   it.each(cities)('$zhName: every station is reachable within its operating network', (city) => {
-    // Amap supplies Pingshan SkyShuttle as a separate network, without walking links.
+    // SkyShuttle and London's Cable Car have no internal rail interchange.
     const independent =
       city.id === 'shenzhen'
         ? city.lines.find((l) => localisedName(l, 'zh-CN') === '坪山云巴1号线')!.stationIds
-        : [];
+        : city.id === 'london'
+          ? city.lines.find((l) => l.kind === 'cable-car')!.stationIds
+          : [];
     const groups = [city.stations.map((s) => s.id).filter((id) => !independent.includes(id))];
     if (independent.length) groups.push(independent);
     for (const group of groups) {
@@ -133,7 +135,7 @@ describe('Hangzhou, Shaoxing and Haining topology', () => {
         const trip = route(branchNetwork, from, to);
         expect(names(hz, trip.stationIds)).toEqual([from, junction, to]);
         expect(names(hz, trip.transferIds)).toEqual([junction]);
-        expect(routeGroups(trip)).toHaveLength(2);
+        expect(routeGroups(trip, hz.city)).toHaveLength(2);
       }
       for (const arm of [a, b]) {
         expect(route(branchNetwork, trunk, arm).transferIds).toHaveLength(0);
@@ -161,7 +163,7 @@ describe('Hangzhou, Shaoxing and Haining topology', () => {
         const trip = route(hz, from, to);
         expect(names(hz, trip.transferIds)).toEqual(['黄酒小镇']);
         expect(new Set(trip.lineIds)).toEqual(new Set([lineId]));
-        expect(routeGroups(trip)).toHaveLength(2);
+        expect(routeGroups(trip, hz.city)).toHaveLength(2);
       }
     }
     expect(route(hz, '镜水路', '张墅').transferIds).toHaveLength(0);
@@ -216,7 +218,7 @@ describe('Shenzhen and Guangzhou topology', () => {
       const trip = route(gz, start, end);
       expect(names(gz, trip.stationIds)).toEqual([start, '体育西路', end]);
       expect(names(gz, trip.transferIds)).toEqual(transfers);
-      const groups = routeGroups(trip);
+      const groups = routeGroups(trip, gz.city);
       expect(groups).toHaveLength(transfers.length + 1);
       expect(groups.every((group) => group.lineId === 'guangzhou-3号线')).toBe(true);
     }
@@ -293,7 +295,7 @@ describe('route finding', () => {
         const r = findRoute(sh, id(sh, from), id(sh, to), [], preference)!;
         expect(names(sh, r.stationIds)).toEqual([from, '龙溪路', to]);
         expect(names(sh, r.transferIds)).toEqual(['龙溪路']);
-        expect(routeGroups(r)).toHaveLength(2);
+        expect(routeGroups(r, sh.city)).toHaveLength(2);
         expect(new Set(r.lineIds).size).toBe(1);
       }
     },

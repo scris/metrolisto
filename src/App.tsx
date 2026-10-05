@@ -74,6 +74,7 @@ export default function App() {
     rail: t('市域铁路'),
     tram: t('有轨电车'),
     maglev: t('磁浮列车'),
+    'cable-car': t('缆车'),
   };
 
   const [initial] = useState(() => readSavedData(cities));
@@ -595,7 +596,7 @@ export default function App() {
             </b>
           </div>
           <div className="itinerary">
-            {routeGroups(preview).map((group, i) => (
+            {routeGroups(preview, city).map((group, i) => (
               <div className="leg" key={i}>
                 <i style={{ background: network.lineById.get(group.lineId)!.color }} />
                 <div>
@@ -1330,7 +1331,7 @@ export default function App() {
               </h3>
               {journeyDetail.kind === 'trip' ? (
                 <div className="itinerary">
-                  {routeGroups(journeyDetail).map((g, i) => (
+                  {routeGroups(journeyDetail, city).map((g, i) => (
                     <div className="leg" key={i}>
                       <i style={{ background: network.lineById.get(g.lineId)!.color }} />
                       <div>

@@ -1,4 +1,66 @@
-import type { Point } from '../types';
+import type { CityData, Point } from '../types';
+
+export interface StationSpan {
+  points: Point[];
+  from: Point;
+  to: Point;
+  length: number;
+  angle: number;
+  center: Point;
+  padding: number;
+}
+
+/** Span offset drawing endpoints while keeping a single logical station. */
+export function stationSpans(city: CityData): Map<string, StationSpan> {
+  const endpoints = new Map(city.stations.map((s) => [s.id, [] as Point[]]));
+  const anchors = new Map(city.stations.map((s) => [s.id, [s.x, s.y] as Point]));
+  for (const edge of city.segments) {
+    endpoints.get(edge.from)!.push(edge.points?.[0] ?? anchors.get(edge.from)!);
+    endpoints.get(edge.to)!.push(edge.points?.at(-1) ?? anchors.get(edge.to)!);
+  }
+  const spans = new Map<string, StationSpan>();
+  for (const [id, points] of endpoints) {
+    if (!points.length) continue;
+    let from = points[0],
+      to = points[0],
+      length = 0;
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const distance = Math.hypot(points[i][0] - points[j][0], points[i][1] - points[j][1]);
+        if (distance > length) {
+          from = points[i];
+          to = points[j];
+          length = distance;
+        }
+      }
+    }
+    if (
+      length > 0.1 ||
+      Math.hypot(from[0] - anchors.get(id)![0], from[1] - anchors.get(id)![1]) > 0.1
+    )
+      spans.set(id, {
+        points: [...new Map(points.map((point) => [point.join(','), point])).values()],
+        from,
+        to,
+        length,
+        angle: (Math.atan2(to[1] - from[1], to[0] - from[0]) * 180) / Math.PI,
+        center: [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2],
+        padding:
+          length > 0.1
+            ? Math.max(
+                ...points.map(
+                  (point) =>
+                    Math.abs(
+                      (to[0] - from[0]) * (point[1] - from[1]) -
+                        (to[1] - from[1]) * (point[0] - from[0]),
+                    ) / length,
+                ),
+              )
+            : 0,
+      });
+  }
+  return spans;
+}
 
 /** Cubic paths store a start point followed by control/control/end triples. */
 export function cubicPath(points: Point[]): string {

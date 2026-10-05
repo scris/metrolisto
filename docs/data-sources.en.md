@@ -2,7 +2,7 @@
 
 English | [简体中文](data-sources.zh.md)
 
-The snapshot is dated 2026-10-03, with additions for Hangzhou and Guangzhou on 2026-10-04. At runtime, the app uses JSON bundled in the repository and does not request online map APIs.
+The snapshot is dated 2026-10-03, with additions for Hangzhou and Guangzhou on 2026-10-04, and London and Amsterdam on 2026-10-05. At runtime, the app uses JSON bundled in the repository and does not request online map APIs.
 
 ## Primary sources
 
@@ -44,6 +44,7 @@ Topology, station names, English names and base schematic coordinates for Hangzh
 - Shenzhen’s Pingshan SkyShuttle remains a separate network, without modelling walking connections to the metro. The snapshot excludes Longhua Tram.
 - Shenzhen’s Grand Theater on Lines 1/2/5 and Guangzhou’s Xinshixu on Lines 12/14 have their station IDs merged according to explicit interchange relationships in the source data.
 - Guangzhou Line 3’s main line and northern extension are combined into one line. The Line 14 branch, Knowledge City Line, remains separate, and Line 11 is a closed loop. Both operating sections of Line 12 belong to the same line, without a segment connecting their endpoints.
+- Guangzhou Lines 4/12 run continuously parallel through Guanzhou–Higher Education Mega Center North–Higher Education Mega Center South, with matching offset endpoints on approaching segments. Recheck this geometry after future Amap imports, keeping routing topology unchanged.
 - Guangzhou Line 3 journeys between the Shipaiqiao and Linhexi sides via Tiyu Xilu count as a transfer within the same line using `sameLineTransfers`. Journeys from the Zhujiang New Town side to either branch remain direct. See [Guangzhou Metro: Tiyu Xilu interchange guide](https://static.nfnews.com/content/202607/07/c12600225.html) for the train-change explanation.
 - Guangzhou’s Airport South (Terminal 1) is marked as unserved in the source data and is excluded from the recordable station list. Line 3 connects Airport North (T2) directly to Gaozeng.
 - Foshan Line 3, with 37 stations and 36 segments, comes from Amap’s Foshan data. It shares existing interchange IDs at Beijiao Park, Dongping, Wanhua and Guicheng; new station coordinates were arranged manually. The line is maintained in `src/data/guangzhou.json` and preserved during import. Check it when the source adds the line or its interchange stations change.
@@ -53,6 +54,43 @@ Topology, station names, English names and base schematic coordinates for Hangzh
 - Shaoxing Line 2 connects at Meishan Square (梅山广场), Shaoxing Line 1 joins Hangzhou Line 5 at Guniangqiao, and the Hangzhou–Haining Intercity Railway joins Line 9 at Linpingnan Railway Station. IDs across sources are mapped only for verified matches within the Shaoxing lines. Hangzhou’s and Shaoxing’s Olympic Sports Center stations retain separate IDs. East Railway Station and East Railway Station (East Square) retain the source’s separate IDs, without modelling an out-of-station walking interchange.
 - The Hangzhou snapshot excludes the conventional-rail Shaoxing Intercity Railway and lines under construction. Hangzhou JSON is maintained separately and is not updated through the existing Amap converter. Updates must check both Hangzhou and Shaoxing sources and the schematic coordinates of supplemental segments.
 - Counts are deduplicated by unique station, line and segment IDs. They do not equal an operator’s sum of station counts across lines.
+
+## London (2026-10-05)
+
+The September 2026 [TfL Tube map](https://content.tfl.gov.uk/standard-tube-map.pdf) and the user-provided [large-print edition](https://content.tfl.gov.uk/large-print-tube-map.pdf) define coverage and English station names: all 11 Underground lines, the six named Overground lines, Elizabeth line, DLR, London Trams and London Cable Car. Thameslink, ordinary buses, River Bus and other National Rail services are excluded. The dataset contains 21 lines, 464 station complexes/stops and 616 line-specific segments. Station names are English only; mode suffixes distinguish separate stations. Coordinates and bends are adapted schematic geometry, not a reproduction of the printed map artwork.
+
+- Shared corridors retain each line’s collection segments and run continuously parallel through intermediate stations; station symbols connect the actual drawing endpoints. These include Circle/Hammersmith & City/Metropolitan, Circle/District, District/Piccadilly, District/Hammersmith & City, Bakerloo/Lioness, Metropolitan/Piccadilly, District/Mildmay, Mildmay/Windrush and Elizabeth/Piccadilly at Heathrow, among others. Piccadilly geometry follows the intermediate District stops it passes without adding station membership or routing edges. The Circle’s two Paddington–Edgware Road approaches are distinct. Its Hammersmith–central loop–Edgware Road service is not treated as an uninterrupted circular railway.
+- Internal interchanges share station IDs. Bank/Monument and Paddington’s connected Underground platforms are station complexes, reducing counts relative to TfL’s individual station counts. Hackney Central/Downs share an internal connecting walkway. External walking links retain separate stops, including Hammersmith, Edgware Road, Bethnal Green, Shepherd’s Bush, West Hampstead, Shadwell, the three Canary Wharf stations and West Croydon. Woolwich and Woolwich Arsenal remain separate. No walking edges are inferred.
+- Branch changes on Underground lines use [TfL working timetables](https://tfl.gov.uk/corporate/publications-and-reports/working-timetables). The ordinary Hainault–Woodford shuttle follows [Central WTT 70](https://content.tfl.gov.uk/cen-wtt-70.pdf); WTT 71 was listed but its detailed PDF could not be retrieved. Peak-only through workings are not inferred. District’s Olympia–High Street Kensington and Wimbledon–Edgware Road services remain direct. Piccadilly’s Terminal 4 loop runs Hatton Cross → Terminal 4 → Terminals 2 & 3. Turnham Green is included although Piccadilly calls there only at certain times.
+- [Overground timetables effective 17 May 2026](https://tfl.gov.uk/modes/london-overground/london-overground-timetables) supply branch patterns. Windrush has Highbury–Crystal Palace/West Croydon and Dalston Junction–Clapham Junction/New Cross service paths. Highbury to either Dalston-origin branch requires changing trains on the shared trunk. Mildmay and Weaver retain their branches. The limited Battersea Park Windrush service is outside Tube-map coverage.
+- The [May–December 2026 Elizabeth line timetable](https://content.tfl.gov.uk/elizabeth-line-17-may-12-december-2026.pdf) supplies Reading–Abbey Wood and Heathrow T4/T5–Abbey Wood/Shenfield paths. These combine recurring weekday/weekend patterns and are not all available simultaneously. Reading–Shenfield requires a change; stopping-pattern variants, short workings and mainline-platform services are not separate lines or edges.
+- The [March 2026 DLR map](https://content.tfl.gov.uk/dlr-route-map.pdf) supplies all 45 stops and the directed Bank → Lewisham bypass of West India Quay. The return train calls there. Service paths distinguish Bank–Lewisham/Woolwich Arsenal, Tower Gateway–Beckton, Stratford–Lewisham and Stratford International–Beckton/Woolwich Arsenal, counting changes between services sharing tracks.
+- Pudding Mill Lane–Stratford is a direct bidirectional DLR segment. Its drawn path is separated from Elizabeth line to keep it visible; travel to the Stratford International branch still requires a train change.
+- Wembley Park–Finchley Road has separate parallel Jubilee and Metropolitan paths, including the intermediate Jubilee stops skipped by Metropolitan. The Metropolitan express segment remains one routing and collection edge.
+- The [Tram service map](https://content.tfl.gov.uk/tram-service-map.pdf) supplies all 39 stops. [Wimbledon’s TfL stop page](https://tfl.gov.uk/tram/stop/940GZZCRWMB/wimbledon-tramlink-stop) supports the Beckenham Junction and Elmers End services. New Addington services traverse the clockwise Croydon street loop; through continuity at the second East Croydon visit is preserved. Reeves Corner is inbound only; westbound trains use Church Street → Wandle Park. Limited early/late Wimbledon–New Addington through workings are not modeled.
+- Cable Car’s Royal Docks and Greenwich Peninsula stops are included as a separate operating component. The schema has no walking-link type, so journeys to Royal Victoria or North Greenwich are not synthesized by merging their stations.
+
+Service profiles describe ordinary direct travel, not a timetable-aware journey planner. Frequencies, temporary closures, platform walking times and all exceptional workings are outside this snapshot. Update London manually in its city JSON and check the source maps, service paths, directional segments and station complexes together.
+
+## Amsterdam (2026-10-05)
+
+Coverage is the operating GVB metro network, with 5 lines, 39 unique stations and 71 line-specific segments. Dutch station names are used in both interface languages. Trams, including the former M51 route to Amstelveen and today’s tram 25, buses, ferries and NS rail are excluded. No Schiphol extension or Isolatorweg–Centraal ring-closing connection is invented.
+
+Current [GVB line information](https://gvb.nl/reisinformatie/haltes-en-dienstregeling?id=30), [M50’s stop list](https://gvb.nl/reisinformatie/lijn/GVB/50) and [M51’s stop list](https://www.gvb.nl/reisinformatie/lijn/GVB/51) establish the routes. September 2026 published stop timetables verify [M52](https://www.gvb.nl/en/travel-information/stop/pdf?direction=Inbound&lineNumber=52&startDate=2026-09-22&stopCode=NL%3AS%3A30009583) and [M53](https://www.gvb.nl/en/travel-information/stop/pdf?direction=Outbound&lineNumber=53&startDate=2026-09-29&stopCode=NL%3AS%3A30009542). GVB’s [complete M54 stop list](https://over.gvb.nl/nieuws/gvb-rijdt-met-metro-52-noord-zuidlijn-en-54-op-nieuwjaarsnacht/) is cross-checked against the map and current line coverage.
+
+| Line | Ordinary termini                                      | Stations |
+| ---- | ----------------------------------------------------- | -------- |
+| M50  | Isolatorweg–Gein                                      | 20       |
+| M51  | Isolatorweg–Centraal Station, via Zuid and Spaklerweg | 19       |
+| M52  | Noord–Zuid                                            | 8        |
+| M53  | Centraal Station–Gaasperplas                          | 14       |
+| M54  | Centraal Station–Gein                                 | 15       |
+
+Shared stations use one ID, while each line keeps its own collection segments and drawn path. Shared tracks have continuous parallel paths through intermediate stations, with station markers spanning the paths rather than pulling every line back to the station anchor. M50/M51 share Isolatorweg–Overamstel; M51/M53/M54 share Centraal Station–Spaklerweg; M53/M54 share Spaklerweg–Van der Madeweg; M50/M54 share Van der Madeweg–Gein. Overamstel–Spaklerweg belongs to M51 and Overamstel–Van der Madeweg to M50. Travel between Gein and Gaasperplas requires a real change at Van der Madeweg. M52 connects to the other lines only at Centraal Station and Zuid; Europaplein–RAI is an external walk and has no invented rail edge.
+
+Names follow GVB’s Dutch forms, including `Bijlmer ArenA`, `Amstelstation` and `Burg. de Vlugtlaan`. Generic `Station` prefixes are omitted for compact display where appropriate, with the official prefixed forms retained as search aliases. `Diemen-Zuid` also matches `Diemen Zuid`. Line names use `Metrolijn` and short names M50–M54.
+
+The downloadable [GVB Metrokaart with the 2025 summer overlay](https://assets.ctfassets.net/d6yaib7us1l3/30k69FRENe3aHXpQdpfip4/69b57e56535f1454b1ab4d728cee1b76/Metrokaart_2025_-_zomerwerk.pdf) is a secondary reference for names, approximate placement and line colours; its temporary closures and replacement transport are not used as operating topology. Coordinates and paths are drawn manually for this app. GVB’s [new numbering and service plan](https://over.gvb.nl/nieuws/nieuwe-lijnnummers-en-kleuren-maken-amsterdamse-metro-overzichtelijker/) applies at the start of the 2028 timetable and is not included in this 2026 snapshot. Summer works and other temporary changes are also excluded. Maintain Amsterdam directly in its city JSON, preserving IDs on later updates.
 
 ## Updating data
 
@@ -74,7 +112,7 @@ Rights to map data and names remain with their respective rights holders. This d
 
 ## English names and contributor labels
 
-Beijing and Shanghai are maintained by the MetroListo app developer. Shenzhen and the Guangzhou metropolitan area were contributed by [Hashmapw](https://github.com/Hashmapw); the Hangzhou metropolitan area was contributed by [scris](https://github.io/scris).
+Beijing, Shanghai and London are maintained by the MetroListo app developer. Shenzhen and the Guangzhou metropolitan area were contributed by [Hashmapw](https://github.com/Hashmapw); the Hangzhou metropolitan area and Amsterdam were contributed by [scris](https://github.io/scris).
 
 English station names follow operators’ bilingual network maps, preserving proper names, directional abbreviations and English parenthetical text. Proper names are not retranslated when the interface language changes:
 
@@ -83,7 +121,7 @@ English station names follow operators’ bilingual network maps, preserving pro
 - Shenzhen: the [Shenzhen Metro official bilingual network map](https://www.szmc.net/SMARTC/upload/image/20260630/1782803829923076269.png), including an inset for Pingshan SkyShuttle; examples include `Window of the World`, `SUAT` and `Airport (T3)`.
 - Guangzhou: the [Guangzhou Metro official bilingual network map (2026-07-30)](https://cs.gzmtr.com/ckfw/xlu_2020/202607/W020260730790914610429.png), including Guangfo Line and Foshan Lines 2 and 3; examples include `Xiaode Dong`, `Luocun` and `Qiandeng Lake`.
 
-Chinese and English station names are stored together in the `names` lists in `src/data/<city>.json` (`zh-CN` / `en`). Other names, sources and contributors are maintained in the same file. `aliases` is used only for search aliases.
+London supplies English-only names and Amsterdam supplies Dutch-only names, both using the normal interface fallback. Chinese and English station names in the Chinese city datasets are stored together in the `names` lists in `src/data/<city>.json` (`zh-CN` / `en`). Other names, sources and contributors are maintained in the same file. `aliases` is used only for search aliases.
 
 The Amap converter supports topology and coordinate updates for Shanghai, Beijing, Shenzhen and Guangzhou, preserving verified names, aliases, city metadata and line order. It prompts for missing official English names on new Beijing and Shanghai stations or lines, and tests check bilingual completeness. Other cities can contribute JSON directly using the same schema.
 

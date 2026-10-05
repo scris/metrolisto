@@ -86,7 +86,7 @@ export function validateCity(value: unknown): CityData {
       !object(l) ||
       !text(l.id) ||
       !/^#[0-9a-f]{6}$/i.test(l.color) ||
-      !['metro', 'tram', 'rail', 'maglev'].includes(l.kind) ||
+      !['metro', 'tram', 'rail', 'maglev', 'cable-car'].includes(l.kind) ||
       lines.has(l.id)
     )
       fail('线路信息无效');
@@ -138,6 +138,51 @@ export function validateCity(value: unknown): CityData {
       const b = city.segments.find((s) => s.id === pair[1])!;
       if (a.lineId !== b.lineId || ![a.from, a.to].some((id) => id === b.from || id === b.to))
         fail('同线换乘区间必须同线相邻');
+    }
+  }
+  for (const line of city.lines) {
+    if (line.services === undefined) continue;
+    if (!Array.isArray(line.services) || !line.services.length) fail('直通交路不能为空');
+    const serviceIds = new Set<string>();
+    const covered = new Set<string>();
+    for (const service of line.services) {
+      if (
+        !object(service) ||
+        !text(service.id) ||
+        serviceIds.has(service.id) ||
+        !Array.isArray(service.stationIds) ||
+        service.stationIds.length < 2 ||
+        service.stationIds.some((id) => !line.stationIds.includes(id)) ||
+        (service.oneWay !== undefined && typeof service.oneWay !== 'boolean')
+      )
+        fail(`${line.id} 的直通交路无效`);
+      serviceIds.add(service.id);
+      for (let i = 1; i < service.stationIds.length; i++) {
+        const from = service.stationIds[i - 1],
+          to = service.stationIds[i];
+        for (const [a, b] of service.oneWay
+          ? [[from, to]]
+          : [
+              [from, to],
+              [to, from],
+            ]) {
+          const matching = city.segments.filter(
+            (edge) =>
+              edge.lineId === line.id &&
+              ((edge.from === a && edge.to === b) ||
+                (!edge.oneWay && edge.to === a && edge.from === b)),
+          );
+          if (!matching.length) fail(`${line.id} 的交路区间不存在或方向错误`);
+          for (const edge of matching) covered.add(`${edge.id}|${a}`);
+        }
+      }
+    }
+    for (const edge of city.segments.filter((edge) => edge.lineId === line.id)) {
+      if (
+        !covered.has(`${edge.id}|${edge.from}`) ||
+        (!edge.oneWay && !covered.has(`${edge.id}|${edge.to}`))
+      )
+        fail(`${line.id} 的交路未覆盖运营区间`);
     }
   }
   for (const source of city.sources)

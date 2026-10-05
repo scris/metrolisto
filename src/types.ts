@@ -23,8 +23,10 @@ export interface MetroLine {
   names: Names;
   shortNames: Names;
   color: string;
-  kind: 'metro' | 'rail' | 'tram' | 'maglev';
+  kind: 'metro' | 'rail' | 'tram' | 'maglev' | 'cable-car';
   stationIds: string[];
+  /** Ordered direct service paths; repeated stops model loops. Reverse unless oneWay. */
+  services?: { id: string; stationIds: string[]; oneWay?: boolean }[];
 }
 
 /** Each physical section is explicit; optional city rules describe same-line train changes. */

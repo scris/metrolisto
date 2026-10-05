@@ -13,9 +13,10 @@ describe('city distance ordering', () => {
     ['hangzhou', ['hangzhou', 'shanghai', 'guangzhou', 'shenzhen', 'beijing']],
   ])('orders cities relative to %s without changing the registry', (id, expected) => {
     const original = [...cities];
+    const regionalCities = cities.filter((city) => expected.includes(city.id));
     expect(
       sortCitiesByDistance(
-        cities,
+        regionalCities,
         cities.find((city) => city.id === id)!,
       ).map((c) => c.id),
     ).toEqual(expected);
@@ -34,6 +35,20 @@ describe('city distance ordering', () => {
     expect(
       cityDistanceKm({ latitude: 0, longitude: 0 }, { latitude: 0, longitude: 180 }),
     ).toBeCloseTo(Math.PI * 6371);
+  });
+
+  it.each(['london', 'amsterdam'])('puts the neighboring European city next to %s', (id) => {
+    const current = cities.find((city) => city.id === id)!;
+    const neighbor = cities.find(
+      (city) => ['london', 'amsterdam'].includes(city.id) && city.id !== id,
+    )!;
+    expect(
+      sortCitiesByDistance(cities, current)
+        .slice(0, 2)
+        .map((city) => city.id),
+    ).toEqual([id, neighbor.id]);
+    expect(cityDistanceKm(current, neighbor)).toBeGreaterThan(350);
+    expect(cityDistanceKm(current, neighbor)).toBeLessThan(370);
   });
 
   it('puts the current city first even when another city has the same coordinates', () => {
