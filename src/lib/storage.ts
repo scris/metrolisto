@@ -138,7 +138,12 @@ export function removeStationLighting(journeys: Journey[], stationId: string): J
 }
 
 export function getProgress(journeys: Journey[]): Progress {
-  const result: Progress = { stations: new Map(), segments: new Set(), lines: new Set() };
+  const result: Progress = {
+    stations: new Map(),
+    litStations: new Set(),
+    segments: new Set(),
+    lines: new Set(),
+  };
   for (const j of journeys) {
     j.stationIds.forEach((id, i) => {
       const state = result.stations.get(id) ?? {
@@ -149,6 +154,7 @@ export function getProgress(journeys: Journey[]): Progress {
       state.passed = true;
       if (i === 0 || i === j.stationIds.length - 1) state.visited = true;
       if (j.transferIds.includes(id)) state.transferred = true;
+      if (state.visited || state.transferred) result.litStations.add(id);
       result.stations.set(id, state);
     });
     j.segmentIds.forEach((id) => result.segments.add(id));

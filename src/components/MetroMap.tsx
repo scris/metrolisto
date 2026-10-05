@@ -299,11 +299,7 @@ export default function MetroMap({
     }
   };
   const selectedState = selected ? progress.stations.get(selected.id) : undefined;
-  const selectedLit = !!(
-    selectedState?.visited ||
-    selectedState?.transferred ||
-    selectedState?.passed
-  );
+  const selectedLit = !!selected && progress.litStations.has(selected.id);
 
   return (
     <div ref={frame} className={`map-frame ${expanded ? 'expanded' : ''}`}>
@@ -612,7 +608,7 @@ export default function MetroMap({
               : selectedState?.transferred
                 ? t('已点亮 · 换乘过')
                 : selectedState?.passed
-                  ? t('已点亮 · 途经过')
+                  ? t('仅途经过 · 尚未点亮')
                   : t('尚未点亮 · 点击站点即可单独点亮')}
           </p>
           <div className="popover-actions">

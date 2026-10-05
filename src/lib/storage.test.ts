@@ -78,6 +78,9 @@ describe('persistent exploration history', () => {
     const data = { version: 1 as const, cities: { shanghai: [trip] } };
     expect(validateBackup(data, cities)).toEqual(data);
     expect(getProgress([trip]).stations.get(id('龙溪路'))?.transferred).toBe(true);
+    expect(getProgress([trip]).litStations).toEqual(
+      new Set([id('上海动物园'), id('龙溪路'), id('龙柏新村')]),
+    );
     expect(() =>
       validateBackup({ version: 1, cities: { shanghai: [{ ...trip, transferIds: [] }] } }, cities),
     ).toThrow();
@@ -103,6 +106,7 @@ describe('persistent exploration history', () => {
   it('single station lighting never lights any section or line', () => {
     const p = getProgress([manual]);
     expect(p.stations.size).toBe(1);
+    expect(p.litStations).toEqual(new Set([id('人民广场')]));
     expect(p.segments.size).toBe(0);
     expect(p.lines.size).toBe(0);
     expect(p.stations.get(id('人民广场'))).toEqual({
@@ -125,19 +129,58 @@ describe('persistent exploration history', () => {
     });
     expect(p.stations.get(id('徐家汇'))?.visited).toBe(true);
     expect(p.stations.get(id('陆家嘴'))?.visited).toBe(true);
+    expect(p.litStations).toEqual(new Set([id('徐家汇'), id('人民广场'), id('陆家嘴')]));
+    expect(p.litStations.has(id('南京东路'))).toBe(false);
+    expect(p.stations.size).toBe(journey.stationIds.length);
+    expect(p.segments).toEqual(new Set(journey.segmentIds));
     const both = getProgress([journey, manual]);
     expect(both.stations.get(id('人民广场'))).toEqual({
       passed: true,
       transferred: true,
       visited: true,
     });
+    expect(both.litStations).toEqual(p.litStations);
+  });
+  it('counts only endpoints even after travelling every section of a line', () => {
+    const city = cities.find((city) => city.id === 'amsterdam')!;
+    const line = city.lines.find((line) => line.id === 'amsterdam-m52')!;
+    const from = line.stationIds[0],
+      to = line.stationIds.at(-1)!;
+    const trip: Journey = {
+      ...findRoute(createNetwork(city), from, to)!,
+      id: 'full-line',
+      kind: 'trip',
+      createdAt: journey.createdAt,
+    };
+    const restored = validateBackup(
+      JSON.parse(JSON.stringify({ version: 1, cities: { amsterdam: [trip] } })),
+      cities,
+    );
+    const p = getProgress(restored.cities.amsterdam);
+    expect(p.stations.size).toBe(line.stationIds.length);
+    expect(p.segments.size).toBe(city.segments.filter((s) => s.lineId === line.id).length);
+    expect(p.litStations).toEqual(new Set([from, to]));
+  });
+  it('recalculates lighting when a passing station is visited and that visit is removed', () => {
+    const stationId = id('南京东路');
+    const visit: Journey = { ...manual, stationIds: [stationId] };
+    const original = getProgress([journey]);
+    const visited = getProgress([journey, visit]);
+    expect(visited.litStations).toEqual(new Set([...original.litStations, stationId]));
+    expect(visited.stations.get(stationId)?.visited).toBe(true);
+    const remaining = removeStationLighting([journey, visit], stationId);
+    expect(getProgress(remaining)).toEqual(original);
+    expect(getProgress(remaining).stations.get(stationId)?.passed).toBe(true);
+    expect(getProgress(remaining).litStations.has(stationId)).toBe(false);
   });
   it('deduplicates repeated routes and safely recalculates after undo', () => {
     const p = getProgress([journey, { ...journey, id: 'trip-2' }, manual]);
+    expect(p.litStations.size).toBe(3);
     expect(p.segments.size).toBe(journey.segmentIds.length);
     expect(getProgress([journey, manual]).segments.size).toBe(p.segments.size);
     const afterUndo = getProgress([manual]);
     expect(afterUndo.stations.size).toBe(1);
+    expect(afterUndo.litStations).toEqual(new Set([id('人民广场')]));
     expect(afterUndo.segments.size).toBe(0);
   });
   it('round-trips a backup without dropping records', () => {

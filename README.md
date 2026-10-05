@@ -53,9 +53,10 @@ iOS uses Swift Package Manager. See [Native app development](docs/native-apps.en
 - Amsterdam: **5 lines, 39 unique stations and 71 segments**, covering GVB metro M50–M54 with Dutch station names. Trams, buses, ferries and NS rail are excluded.
 - An SVG schematic network map with dragging, wheel zoom, pinch zoom, fit-to-network, line filters and station search. Station labels adjust to avoid overlap as you zoom.
 - Choose boarding and alighting stations plus up to three ordered transfer stations. Each selected transfer station must involve an actual change of train. Choose between balanced recommendations and fewest transfers.
-- Preview the complete route and its station lists by leg, then confirm to mark the endpoints, every station passed through, actual transfer stations and travelled segments.
+- Preview the complete route and its station lists by leg, then confirm to mark the endpoints, actual transfer stations and travelled segments, while recording stations passed through separately.
 - Clicking a station records boarding or alighting there without marking any segments. Station details let you remove a single-station mark while keeping visits contributed by other journeys.
 - Stations separately track passing through, transfers, and boarding or alighting. Transfer and boarding/alighting records can coexist; a solid blue mark with an orange indicator means both are present.
+- City and line progress count only stations boarded or alighted at or used for an actual transfer, including individual station visits. Passing through does not count. Line percentages use the same station counts shown on each card.
 - A journey timeline, line collection progress and record undo. Undo recalculates progress from the remaining records, preserving visits shared with other journeys.
 - Persistence in localStorage, isolated by city, with updates across browser tabs, JSON backup export and merge restore. Invalid records are quarantined and retained in exports without blocking valid records; raw storage that cannot be parsed as a whole is never automatically overwritten.
 - A two-column desktop layout and bottom navigation on mobile. Keyboard users can search and select stations, move the map with arrow keys, zoom with plus/minus, and mark stations with Enter or Space.

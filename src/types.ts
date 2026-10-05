@@ -94,7 +94,10 @@ export interface StationState {
 }
 
 export interface Progress {
+  /** All recorded station states, including passing through without a visit. */
   stations: Map<string, StationState>;
+  /** Unique stations boarded/alighted at or used for an actual transfer. */
+  litStations: Set<string>;
   segments: Set<string>;
   lines: Set<string>;
 }

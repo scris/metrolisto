@@ -123,7 +123,7 @@ export default function App() {
     () => new Set(journeys.filter((j) => j.kind === 'station').map((j) => j.stationIds[0])),
     [journeys],
   );
-  const percentage = ((progress.stations.size / city.stations.length) * 100).toFixed(1);
+  const percentage = ((progress.litStations.size / city.stations.length) * 100).toFixed(1);
   const trips = journeys.filter((j) => j.kind === 'trip');
   const displayName = (id: string) => name(network.stationById.get(id)) || id;
   const suggestion = useMemo(() => {
@@ -302,7 +302,7 @@ export default function App() {
       setToast({
         text: t(
           '旅程已收集，点亮 {0} 站、{1} 个区间',
-          preview.stationIds.length,
+          getProgress([journey]).litStations.size,
           preview.segmentIds.length,
         ),
         undoId: journey.id,
@@ -386,7 +386,7 @@ export default function App() {
     },
   }[page];
 
-  const stationRatio = progress.stations.size / city.stations.length;
+  const stationRatio = progress.litStations.size / city.stations.length;
   const hero = (
     <section className="hero">
       <div className="hero-body">
@@ -399,11 +399,14 @@ export default function App() {
           <small>%</small>
         </div>
         <p>
-          {progress.stations.size === 0
+          {progress.litStations.size === 0
             ? t('你的城市故事，从熟悉的那一站开始。')
             : stationRatio === 1
               ? t('整座城市，都有你的足迹。')
-              : t('还有 {0} 个站点，等你去发现。', city.stations.length - progress.stations.size)}
+              : t(
+                  '还有 {0} 个站点，等你去发现。',
+                  city.stations.length - progress.litStations.size,
+                )}
         </p>
         <div className="hero-track" aria-hidden="true">
           <i style={{ width: `${Math.max(stationRatio * 100, 0)}%` }} />
@@ -421,7 +424,7 @@ export default function App() {
       </div>
       <div className="hero-stats">
         <div>
-          <strong>{progress.stations.size}</strong>
+          <strong>{progress.litStations.size}</strong>
           <span>
             / {city.stations.length} {t('站点')}
           </span>
@@ -455,7 +458,7 @@ export default function App() {
       <div className={isMobile ? 'planner-head sheet-head' : 'planner-head'}>
         <div>
           <h2>{t('记录一段旅程')}</h2>
-          <p>{t('先预览路线，再确认点亮沿途')}</p>
+          <p>{t('先预览路线，再确认记录旅程')}</p>
         </div>
         {isMobile && closeButton(t('关闭旅程记录'), () => setPlannerOpen(false))}
       </div>
@@ -617,7 +620,7 @@ export default function App() {
           </div>
           <Button block theme="primary" className="plan-btn" onClick={confirmRoute}>
             <Sparkles size={17} />
-            {t('确认行程，点亮沿途')}
+            {t('确认行程，记录足迹')}
           </Button>
           <p className="preview-note">{t('确认后记录上下车站、换乘站与全部途经区间')}</p>
         </div>
@@ -1002,12 +1005,10 @@ export default function App() {
             <section>
               <div className="lines-grid">
                 {city.lines.map((line) => {
-                  const edges = city.segments.filter((s) => s.lineId === line.id),
-                    lit = edges.filter((s) => progress.segments.has(s.id)).length;
                   const stationLit = line.stationIds.filter((id) =>
-                    progress.stations.has(id),
+                    progress.litStations.has(id),
                   ).length;
-                  const ratio = edges.length ? lit / edges.length : 0;
+                  const ratio = line.stationIds.length ? stationLit / line.stationIds.length : 0;
                   return (
                     <button
                       className="line-card"
@@ -1261,7 +1262,7 @@ export default function App() {
               <h3>{t('记录完整旅程')}</h3>
               <p>
                 {t(
-                  '输入上下车站，可按顺序添加最多三个换乘站。预览路线与沿途站点，确认后点亮所有途经站点和乘车区间。',
+                  '输入上下车站，可按顺序添加最多三个换乘站。预览路线与沿途站点，确认后点亮上下车站、实际换乘站和乘车区间。仅途经站点不计入城市和线路点亮进度。',
                 )}
               </p>
             </div>
