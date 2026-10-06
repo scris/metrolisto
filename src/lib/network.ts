@@ -9,47 +9,80 @@ export interface Network {
   adjacency: Map<string, { to: string; segment: Segment }[]>;
 }
 
-type ServiceIndex = {
+type CityIndex = {
+  edges: Map<string, Segment>;
+  /** Direct-service positions available on a section when leaving the given stop. */
   legs: Map<string, string[]>;
   continuations: Map<string, string>;
+  /** Stops where a rider can leave one direct service and continue on another. */
+  serviceChanges: Set<string>;
 };
-const serviceIndexes = new WeakMap<CityData, ServiceIndex>();
+const cityIndexes = new WeakMap<CityData, CityIndex>();
 
-function serviceIndex(city: CityData): ServiceIndex {
-  const cached = serviceIndexes.get(city);
+function cityIndex(city: CityData): CityIndex {
+  const cached = cityIndexes.get(city);
   if (cached) return cached;
-  const index: ServiceIndex = { legs: new Map(), continuations: new Map() };
+  const index: CityIndex = {
+    edges: new Map(city.segments.map((edge) => [edge.id, edge])),
+    legs: new Map(),
+    continuations: new Map(),
+    serviceChanges: new Set(),
+  };
+  const arrivals = new Map<string, { edge: Segment; token: string }[]>();
+  const departures = new Map<string, { edge: Segment; token: string }[]>();
   for (const line of city.lines) {
-    for (const service of line.services ?? []) {
+    if (!line.services) continue;
+    const edges = city.segments.filter((edge) => edge.lineId === line.id);
+    for (const service of line.services) {
       for (const reverse of service.oneWay ? [false] : [false, true]) {
         const stops = reverse ? [...service.stationIds].reverse() : service.stationIds;
         for (let i = 1; i < stops.length; i++) {
           const token = `${line.id}|${service.id}|${reverse}|${i}`;
           if (i < stops.length - 1)
             index.continuations.set(token, `${line.id}|${service.id}|${reverse}|${i + 1}`);
-          for (const edge of city.segments) {
-            if (edge.lineId !== line.id) continue;
+          for (const edge of edges) {
             if (
               (edge.from === stops[i - 1] && edge.to === stops[i]) ||
               (!edge.oneWay && edge.to === stops[i - 1] && edge.from === stops[i])
             ) {
               const key = `${edge.id}|${stops[i - 1]}`;
               index.legs.set(key, [...(index.legs.get(key) ?? []), token]);
+              arrivals.set(stops[i], [...(arrivals.get(stops[i]) ?? []), { edge, token }]);
+              departures.set(stops[i - 1], [
+                ...(departures.get(stops[i - 1]) ?? []),
+                { edge, token },
+              ]);
             }
           }
         }
       }
     }
   }
-  serviceIndexes.set(city, index);
+  // Turning back over the arrival section is never routed, so it is not a usable change.
+  for (const [station, incoming] of arrivals) {
+    if (
+      incoming.some((a) =>
+        departures
+          .get(station)
+          ?.some(
+            (d) =>
+              d.edge.id !== a.edge.id &&
+              d.edge.lineId === a.edge.lineId &&
+              index.continuations.get(a.token) !== d.token,
+          ),
+      )
+    )
+      index.serviceChanges.add(station);
+  }
+  cityIndexes.set(city, index);
   return index;
 }
 
 const legServices = (city: CityData, edge: Segment, from: string) =>
-  serviceIndex(city).legs.get(`${edge.id}|${from}`) ?? [''];
+  cityIndex(city).legs.get(`${edge.id}|${from}`) ?? [''];
 
 const changesService = (city: CityData, previous: string, next: string) =>
-  (previous !== '' || next !== '') && serviceIndex(city).continuations.get(previous) !== next;
+  (previous !== '' || next !== '') && cityIndex(city).continuations.get(previous) !== next;
 
 export function createNetwork(city: CityData): Network {
   const adjacency: Network['adjacency'] = new Map(city.stations.map((s) => [s.id, []]));
@@ -80,7 +113,8 @@ export function requiresTransfer(city: CityData, incoming: Segment | undefined, 
   );
 }
 
-export function isTransferStation(network: Network, id: string) {
+/** A stop served by several lines, or where a same-line branch needs a change of train. */
+export function isInterchange(network: Network, id: string) {
   return (
     (network.stationLines.get(id)?.length ?? 0) > 1 ||
     (network.city.sameLineTransfers ?? []).some(([a, b]) =>
@@ -88,16 +122,17 @@ export function isTransferStation(network: Network, id: string) {
         const edge = network.segmentById.get(edgeId)!;
         return edge.from === id || edge.to === id;
       }),
-    ) ||
-    network.city.lines.some(
-      (line) =>
-        (line.services?.filter((service) => service.stationIds.includes(id)).length ?? 0) > 1,
     )
   );
 }
 
+/** A stop where a journey can record a change, including between direct services of a line. */
+export function isTransferStation(network: Network, id: string) {
+  return isInterchange(network, id) || cityIndex(network.city).serviceChanges.has(id);
+}
+
 function routeTransferIndices(city: CityData, route: Route) {
-  const edges = new Map(city.segments.map((edge) => [edge.id, edge]));
+  const { edges } = cityIndex(city);
   type Choice = { service: string; indices: number[]; matches: boolean };
   let choices = new Map<string, Choice>([['', { service: '', indices: [], matches: true }]]);
   route.segmentIds.forEach((id, i) => {

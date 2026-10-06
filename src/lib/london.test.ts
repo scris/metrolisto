@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { cities } from '../data';
 import type { CityData } from '../types';
 import { localisedName } from './i18n';
-import { createNetwork, findRoute, routeGroups, routeTransfers, searchStations } from './network';
+import {
+  createNetwork,
+  findRoute,
+  isInterchange,
+  isTransferStation,
+  routeGroups,
+  routeTransfers,
+  searchStations,
+} from './network';
 import { emptyData, validateBackup } from './storage';
 import { validateCity } from './validate';
 
@@ -237,6 +245,26 @@ describe('London Underground branches and direction', () => {
   ])('retains %s through trains from %s to %s', (line, from, to) => {
     expect(trip(line, from, to).transferIds).toEqual([]);
   });
+  it('keeps the two Northern line routes separate at Euston', () => {
+    const direct = trip('northern', 'Camden Town', 'Warren Street');
+    expect(names(direct.stationIds)).toEqual([
+      'Camden Town',
+      'Mornington Crescent',
+      'Euston',
+      'Warren Street',
+    ]);
+    expect(direct.transferIds).toEqual([]);
+    for (const [from, to] of [
+      ["King's Cross St Pancras", 'Mornington Crescent'],
+      ['Mornington Crescent', "King's Cross St Pancras"],
+      ["King's Cross St Pancras", 'Warren Street'],
+    ]) {
+      const route = trip('northern', from, to);
+      expect(names(route.stationIds)).toEqual([from, 'Euston', to]);
+      expect(names(route.transferIds)).toEqual(['Euston']);
+    }
+    expect(trip('northern', "King's Cross St Pancras", 'Camden Town').transferIds).toEqual([]);
+  });
   it('respects the Piccadilly Terminal 4 loop instead of making it bidirectional', () => {
     expect(names(trip('piccadilly', 'Heathrow Terminal 4', 'Hatton Cross').stationIds)).toEqual([
       'Heathrow Terminal 4',
@@ -246,6 +274,15 @@ describe('London Underground branches and direction', () => {
     expect(
       names(trip('piccadilly', 'Heathrow Terminals 2 & 3', 'Heathrow Terminal 4').stationIds),
     ).toEqual(['Heathrow Terminals 2 & 3', 'Hatton Cross', 'Heathrow Terminal 4']);
+    // Trains do not reverse at Hatton Cross: reaching Terminal 4 this way means changing there.
+    expect(
+      names(trip('piccadilly', 'Heathrow Terminals 2 & 3', 'Heathrow Terminal 4').transferIds),
+    ).toEqual(['Hatton Cross']);
+    expect(trip('piccadilly', 'Heathrow Terminal 4', 'Hatton Cross').transferIds).toEqual([]);
+    expect(trip('piccadilly', 'Hounslow West', 'Heathrow Terminals 2 & 3').transferIds).toEqual([]);
+    expect(
+      new Set(findRoute(network, id('Heathrow Terminal 5'), id('Heathrow Terminal 4'))!.lineIds),
+    ).toEqual(new Set(['london-elizabeth']));
     expect(
       trip('piccadilly', 'Heathrow Terminal 4', 'Heathrow Terminal 5').transferIds,
     ).toHaveLength(1);
@@ -357,6 +394,44 @@ describe('Overground and Elizabeth line services', () => {
     if (kind === 'uncovered-edge') line.services!.splice(1, 1);
     if (kind === 'duplicate-service') line.services!.push(structuredClone(service));
     expect(() => validateCity(clone)).toThrow();
+  });
+});
+
+describe('London service changes', () => {
+  it('offers only stops where a change of direct service can be recorded', () => {
+    for (const name of ['Hoxton', 'Canada Water', 'Hanwell', 'Limehouse', 'Mitcham'])
+      expect(isTransferStation(network, id(name))).toBe(true);
+    // Termini and stops where the only other service runs back the same way.
+    for (const name of [
+      'Abbey Wood',
+      'Shenfield',
+      'Beckton',
+      'Lewisham',
+      'Beckenham Road',
+      'Elmers End',
+      "King Henry's Drive",
+      'Reading',
+    ])
+      expect(isTransferStation(network, id(name))).toBe(false);
+    const offered = searchStations(network, '', true);
+    expect(offered.some((s) => s.id === id('Beckenham Road'))).toBe(false);
+    for (const station of offered.filter((s) => !isInterchange(network, s.id))) {
+      const next = network.adjacency.get(station.id)!.map((edge) => edge.to);
+      const previous = city.stations
+        .filter((s) => network.adjacency.get(s.id)!.some((edge) => edge.to === station.id))
+        .map((s) => s.id);
+      expect(
+        previous.some((from) => next.some((to) => findRoute(network, from, to, [station.id]))),
+        station.names[0].value,
+      ).toBe(true);
+    }
+  });
+  it('marks interchanges by lines and branch junctions, not by shared direct services', () => {
+    for (const name of ['Surrey Quays', 'Sydenham', 'Canning Town', 'Sandilands', 'Whitechapel'])
+      expect(isInterchange(network, id(name))).toBe(true);
+    for (const name of ['Hoxton', 'Hanwell', 'Limehouse', 'Mitcham', 'Dundonald Road'])
+      expect(isInterchange(network, id(name))).toBe(false);
+    expect(city.stations.filter((s) => isInterchange(network, s.id)).length).toBeLessThan(150);
   });
 });
 

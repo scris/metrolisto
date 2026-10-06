@@ -1,7 +1,7 @@
 import { useLocale } from './LocaleProvider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Focus, LocateFixed, Maximize2, Minus, Plus, RotateCcw, X } from 'lucide-react';
-import { isTransferStation, type Network } from '../lib/network';
+import { isInterchange, type Network } from '../lib/network';
 import { cubicArrow, cubicPath, stationSpans, type StationSpan } from '../lib/mapGeometry';
 import type { Progress, Route, Station } from '../types';
 
@@ -107,6 +107,11 @@ export default function MetroMap({
   const { locale, t, name } = useLocale();
   const { city } = network;
   const spans = useMemo(() => stationSpans(city), [city]);
+  // Stops that only offer a change between direct services keep the ordinary marker.
+  const interchanges = useMemo(
+    () => new Set(city.stations.filter((s) => isInterchange(network, s.id)).map((s) => s.id)),
+    [network, city],
+  );
   const frame = useRef<HTMLDivElement>(null),
     svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 900, height: 570 });
@@ -226,7 +231,7 @@ export default function MetroMap({
         const priority = (s: Station) =>
           (s.id === selected?.id ? 20 : 0) +
           (routeStations.has(s.id) ? 10 : 0) +
-          (isTransferStation(network, s.id) ? 5 : 0) +
+          (interchanges.has(s.id) ? 5 : 0) +
           (progress.stations.has(s.id) ? 3 : 0);
         return priority(b) - priority(a);
       })
@@ -281,6 +286,7 @@ export default function MetroMap({
     routeStations,
     network,
     spans,
+    interchanges,
     height,
     scale,
     locale,
@@ -479,7 +485,7 @@ export default function MetroMap({
             const span = spans.get(s.id),
               [cx, cy] = span?.center ?? [s.x, s.y];
             const state = progress.stations.get(s.id),
-              interchange = isTransferStation(network, s.id);
+              interchange = interchanges.has(s.id);
             const inRoute = routeStations.has(s.id),
               inLine = !activeLine || network.lineById.get(activeLine)!.stationIds.includes(s.id);
             const r = interchange ? 8.8 : 5.7;
@@ -572,7 +578,7 @@ export default function MetroMap({
               x={x}
               y={y}
               fontSize={fontSize}
-              fontWeight={isTransferStation(network, s.id) ? 600 : 400}
+              fontWeight={interchanges.has(s.id) ? 600 : 400}
               fill={progress.stations.get(s.id)?.visited ? '#0043b3' : '#5a6270'}
               stroke={COLOR.halo}
               strokeWidth="4"
