@@ -38,6 +38,7 @@ export function validateCity(value: unknown): CityData {
     !/^[a-z0-9-]+$/.test(value.id) ||
     !text(value.zhName) ||
     !text(value.enName) ||
+    !languageTag(value.localLanguage) ||
     !text(value.updatedAt) ||
     !text(value.description) ||
     !point(value.center)
@@ -58,6 +59,12 @@ export function validateCity(value: unknown): CityData {
     (!object(city.localName) || !text(city.localName.name) || !languageTag(city.localName.language))
   )
     fail('当地语言城市名或语言标签无效');
+  const localLanguage = new Intl.Locale(city.localLanguage).language;
+  if (
+    !['zh', 'en'].includes(localLanguage) &&
+    (!city.localName || new Intl.Locale(city.localName.language).language !== localLanguage)
+  )
+    fail('当地语言需要提供对应的当地语言城市名');
   if (![city.stations, city.lines, city.segments, city.sources].every(Array.isArray))
     fail('缺少 stations、lines、segments 或 sources');
   if (!city.stations.length || !city.lines.length || !city.segments.length) fail('线网不能为空');

@@ -89,7 +89,6 @@ describe('Amsterdam metro', () => {
         expect(along).toBeLessThanOrEqual(span.length + 0.1);
       }
     }
-    expect(stationSpans(cities.find((c) => c.id === 'shanghai')!).size).toBe(0);
   });
 
   it('keeps M51 through-running via Zuid and Spaklerweg without closing an imaginary ring', () => {

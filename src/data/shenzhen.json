@@ -3,6 +3,7 @@
   "id": "shenzhen",
   "zhName": "深圳",
   "enName": "Shenzhen",
+  "localLanguage": "zh-CN",
   "latitude": 22.5431,
   "longitude": 114.0579,
   "updatedAt": "2026-10-04",

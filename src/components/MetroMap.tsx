@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Focus, LocateFixed, Maximize2, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { isInterchange, type Network } from '../lib/network';
 import { cubicArrow, cubicPath, stationSpans, type StationSpan } from '../lib/mapGeometry';
+import { labelLineOverlap } from '../lib/mapLabels';
 import type { Progress, Route, Station } from '../types';
+import { mapRivers } from '../data/rivers';
 
 interface Props {
   network: Network;
@@ -106,7 +108,9 @@ export default function MetroMap({
 }: Props) {
   const { locale, t, name } = useLocale();
   const { city } = network;
+  const river = mapRivers[city.id];
   const spans = useMemo(() => stationSpans(city), [city]);
+  const lineOverlap = useMemo(() => labelLineOverlap(city), [city]);
   // Stops that only offer a change between direct services keep the ordinary marker.
   const interchanges = useMemo(
     () => new Set(city.stations.filter((s) => isInterchange(network, s.id)).map((s) => s.id)),
@@ -257,7 +261,14 @@ export default function MetroMap({
           { x: cx - w / 2, y: maxY + gap },
         ];
         if ((s.label ?? 0) % 2) directions.reverse();
-        const box = directions.find(
+        // At crossings, all four sides can be occupied by tracks; try the corners too.
+        directions.push(
+          { x: maxX + gap, y: minY - h - gap },
+          { x: minX - w - gap, y: minY - h - gap },
+          { x: maxX + gap, y: maxY + gap },
+          { x: minX - w - gap, y: maxY + gap },
+        );
+        const candidates = directions.filter(
           (p) =>
             p.x >= view.x - view.width / 2 + scale * 8 &&
             p.x + w <= view.x + view.width / 2 - scale * 8 &&
@@ -271,6 +282,10 @@ export default function MetroMap({
                 p.y + h + 5 > b.y,
             ),
         );
+        // Prefer clear space, but retain a readable label when every position crosses a line.
+        const box = candidates
+          .map((position) => ({ position, overlap: lineOverlap({ ...position, w, h }) }))
+          .sort((a, b) => a.overlap - b.overlap)[0]?.position;
         if (!box) return [];
         boxes.push({ ...box, w, h });
         return [{ station: s, x: box.x, y: box.y + h * 0.77, fontSize }];
@@ -286,6 +301,7 @@ export default function MetroMap({
     routeStations,
     network,
     spans,
+    lineOverlap,
     interchanges,
     height,
     scale,
@@ -394,23 +410,23 @@ export default function MetroMap({
           height={height}
           fill={`url(#dots-${city.id})`}
         />
-        {city.id === 'shanghai' && (
+        {river && (
           <g pointerEvents="none">
             <path
-              d="M 1810 350 C 2180 490 1960 790 1735 950 C 1535 1090 2120 1160 1790 1480 S 1410 1770 1510 2100"
+              d={cubicPath(river.points)}
               fill="none"
               stroke="#e8f0f6"
-              strokeWidth="42"
+              strokeWidth={river.width}
             />
             <text
-              x="1755"
-              y="1510"
+              x={river.label.point[0]}
+              y={river.label.point[1]}
               fill="#a9bfcd"
               fontSize="20"
               letterSpacing="8"
-              transform="rotate(-48 1755 1510)"
+              transform={`rotate(${river.label.angle} ${river.label.point.join(' ')})`}
             >
-              {t('黄浦江')}
+              {t(river.name)}
             </text>
           </g>
         )}

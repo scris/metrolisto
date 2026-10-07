@@ -48,7 +48,9 @@ export interface CityData {
   zhName: string;
   /** Required English city name. */
   enName: string;
-  /** Optional local city name and its BCP 47 language tag, e.g. 서울 / ko. */
+  /** BCP 47 tag selecting the local city name from zhName, enName or localName. */
+  localLanguage: string;
+  /** Required for local languages other than Chinese or English, e.g. 서울 / ko. */
   localName?: { name: string; language: string };
   /** Representative city location in WGS 84 decimal degrees. */
   latitude: number;

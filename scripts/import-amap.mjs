@@ -3,6 +3,7 @@
  */
 import fs from 'node:fs';
 import { formatCityData } from './format-city-data.mjs';
+import { layoutShanghaiAirportLink, layoutShanghaiJinshan } from './shanghai-geometry.mjs';
 
 const cityConfigs = {
   shanghai: { amapId: '3100' },
@@ -209,15 +210,19 @@ function makeCity(input) {
       [
         [0, 0],
         [0, 0],
-        [830, 1870],
-        [755, 1945],
-        [680, 2020],
-        [605, 2095],
-        [530, 2170],
-        [455, 2245],
-        [380, 2320],
+        // Chedun stays north of the straight Huangpu reach; Yexie and the
+        // remaining stations stay south. Keep this aligned with the map river.
+        [830, 2055],
+        [755, 2130],
+        [680, 2205],
+        [605, 2280],
+        [530, 2355],
+        [455, 2430],
+        [380, 2505],
       ],
     );
+    layoutShanghaiJinshan([...stations.values()], [...segments.values()]);
+    layoutShanghaiAirportLink([...stations.values()], [...segments.values()]);
     byName('浦东1号2号航站楼').aliases.push('浦东国际机场', '浦东机场', 'pudongairport');
     byName('上海松江站').aliases.push('松江南站');
   } else if (id === 'beijing') {

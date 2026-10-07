@@ -32,11 +32,12 @@ describe('language and city data', () => {
     ];
     expect(validateBackup(data, [city])).toEqual(data);
   });
-  it('accepts optional local city names independently of station languages', () => {
+  it('accepts local city names independently of station languages', () => {
     const city = validateCity({
       ...structuredClone(example),
       zhName: '首尔',
       enName: 'Seoul',
+      localLanguage: 'ko',
       localName: { name: '서울', language: 'ko' },
     });
     expect(localisedName(city, 'zh-CN')).toBe('首尔');
@@ -45,6 +46,24 @@ describe('language and city data', () => {
     expect(localisedName(city.stations[1], 'en-GB')).toBe('中央公园');
     expect(validateCity(example).localName).toBeUndefined();
   });
+  it.each([undefined, null, '', ' ', 42, 'ko_KR'])(
+    'rejects missing or invalid official city language: %j',
+    (localLanguage) => {
+      expect(() => validateCity({ ...example, localLanguage })).toThrow();
+    },
+  );
+  it.each([undefined, { name: '서울', language: 'ja' }])(
+    'requires a matching local name for other local languages: %j',
+    (localName) => {
+      expect(() => validateCity({ ...example, localLanguage: 'ko', localName })).toThrow();
+    },
+  );
+  it.each(['zh', 'zh-Hant', 'en', 'EN-us'])(
+    'allows local language %s without a local name',
+    (localLanguage) => {
+      expect(validateCity({ ...example, localLanguage }).localLanguage).toBe(localLanguage);
+    },
+  );
   it.each([
     { zhName: undefined },
     { zhName: '' },
@@ -146,8 +165,8 @@ describe('language and city data', () => {
       ...structuredClone(example),
       attribution: { kind: 'community', name: 'Alice' },
     });
-    expect(contributionLabel(city, 'zh-CN')).toBe('由 alice 贡献');
-    expect(contributionLabel(city, 'en-GB')).toBe('Contributed by alice');
+    expect(contributionLabel(city, 'zh-CN')).toBe('由 Alice 贡献');
+    expect(contributionLabel(city, 'en-GB')).toBe('Contributor: Alice');
     expect(contributionLabel({ attribution: undefined }, 'en-GB')).toBe(
       'Contributor not specified',
     );
@@ -162,7 +181,7 @@ describe('language and city data', () => {
     for (const city of cities.filter((city) => ['shanghai', 'beijing'].includes(city.id))) {
       expect(city.attribution).toEqual({ kind: 'official' });
       expect(contributionLabel(city, 'zh-CN')).toBe('由应用开发者维护');
-      expect(contributionLabel(city, 'en-GB')).toBe('Maintained by the app developer');
+      expect(contributionLabel(city, 'en-GB')).toBe('Maintainer: App Developer');
       for (const names of [
         ...city.stations.map((s) => s.names),
         ...city.lines.flatMap((l) => [l.names, l.shortNames]),
@@ -171,6 +190,26 @@ describe('language and city data', () => {
         expect(names.some((n) => n.language === 'en' && n.value.trim())).toBe(true);
       }
       expect(city.sources.every((s) => s.titleEn?.trim())).toBe(true);
+    }
+  });
+  it('supplies English names for every Hangzhou, Shaoxing and Haining station', () => {
+    const city = cities.find((city) => city.id === 'hangzhou')!;
+    const network = createNetwork(city);
+    for (const station of city.stations) {
+      expect(
+        station.names.some((name) => /^en(?:-|$)/i.test(name.language) && name.value.trim()),
+        localisedName(station, 'zh-CN'),
+      ).toBe(true);
+    }
+    for (const [english, chinese] of [
+      ['Jingchang Road', '荆长路'],
+      ['China Textile City', '中国轻纺城'],
+      ['Shaoxing North Railway Station', '绍兴北站'],
+      ['Houshu Road', '后墅路'],
+    ]) {
+      const station = searchStations(network, english)[0];
+      expect(localisedName(station, 'zh-CN')).toBe(chinese);
+      expect(localisedName(station, 'en-GB')).toBe(english);
     }
   });
   it('uses official station names and keeps earlier names searchable', () => {
@@ -186,7 +225,7 @@ describe('language and city data', () => {
     );
   });
   it('substitutes values without interpreting contributor names as templates', () => {
-    expect(translate('en-GB', '由 {0} 贡献', 'Alice {1}')).toBe('Contributed by Alice {1}');
+    expect(translate('en-GB', '由 {0} 贡献', 'Alice {1}')).toBe('Contributor: Alice {1}');
     expect(
       localisedName(
         {

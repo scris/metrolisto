@@ -5,7 +5,7 @@ import example from '../../docs/city.example.json';
 import { stationSpans } from './mapGeometry';
 
 describe('parallel station markers', () => {
-  it.each(['london', 'guangzhou'])(
+  it.each(['london', 'guangzhou', 'shanghai'])(
     '%s: encloses the drawing endpoints at shared stops and branches',
     (id) => {
       const city = cities.find((c) => c.id === id)!;
@@ -90,8 +90,37 @@ describe('parallel station markers', () => {
     expect(span.padding).toBe(0);
   });
 
-  it('preserves Shanghai drawing paths and circular station markers', () => {
-    expect(stationSpans(cities.find((c) => c.id === 'shanghai')!).size).toBe(0);
+  it('joins Shanghai parallel tracks only at the two Jinshan interchanges', () => {
+    const city = cities.find((c) => c.id === 'shanghai')!;
+    const spans = stationSpans(city);
+    expect([...spans.keys()].sort()).toEqual(['310100025685025', '310100025685029']);
+    const rail = city.segments.filter((s) => s.lineId === 'shanghai-金山铁路');
+    expect(rail[0].points!.at(-1)).toEqual(rail[1].points![0]);
+    for (const span of spans.values()) expect(span.length).toBeCloseTo(14, 1);
+  });
+
+  it('keeps Jinshan clear of the intermediate Line 1 station markers even when highlighted', () => {
+    const city = cities.find((c) => c.id === 'shanghai')!;
+    const points = city.segments.find(
+      (s) => s.lineId === 'shanghai-金山铁路' && s.to === '310100025685029',
+    )!.points!;
+    for (const id of ['310100025685028', '310100025685027', '310100025685026']) {
+      const station = city.stations.find((s) => s.id === id)!;
+      const clearance = Math.min(
+        ...points.slice(1).map((b, i) => {
+          const a = points[i],
+            dx = b[0] - a[0],
+            dy = b[1] - a[1];
+          const t = Math.max(
+            0,
+            Math.min(1, ((station.x - a[0]) * dx + (station.y - a[1]) * dy) / (dx * dx + dy * dy)),
+          );
+          return Math.hypot(station.x - a[0] - t * dx, station.y - a[1] - t * dy);
+        }),
+      );
+      // Ordinary marker radius + outline + the widest route stroke's half-width.
+      expect(clearance).toBeGreaterThan(5.7 + 0.9 + 9 / 2);
+    }
   });
 
   it('keeps Guangzhou 4/12 parallel through Daxuechengbei', () => {

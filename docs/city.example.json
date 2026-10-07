@@ -3,6 +3,7 @@
   "id": "example-city",
   "zhName": "示例城市",
   "enName": "EXAMPLE CITY",
+  "localLanguage": "zh-CN",
   "latitude": 0,
   "longitude": 0,
   "updatedAt": "2026-10-03",

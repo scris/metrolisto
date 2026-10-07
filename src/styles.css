@@ -1722,6 +1722,37 @@ svg {
   color: var(--text-3);
   margin-top: 18px;
 }
+.city-popup {
+  overflow: hidden;
+}
+.city-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: min(80dvh, 720px);
+}
+.city-sheet .sheet-head,
+.city-sheet::before {
+  flex-shrink: 0;
+}
+.city-options {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+.city-contribution {
+  flex-shrink: 0;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+.city-contribution a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .city-option {
   width: 100%;
   display: flex;
@@ -1883,6 +1914,11 @@ svg {
 }
 .action-row > svg:last-child {
   color: var(--text-4);
+}
+.action-divider {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
 }
 .privacy {
   display: flex;
@@ -2478,14 +2514,28 @@ svg {
   gap: 16px;
   margin: 8px 0 20px;
 }
-.language-setting select {
+.language-select {
+  position: relative;
   max-width: 65%;
-  padding: 9px 12px;
+  min-width: 0;
+}
+.language-select select {
+  appearance: none;
+  width: 100%;
+  padding: 9px 40px 9px 12px;
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 8px;
   background: white;
   color: inherit;
   font: inherit;
+}
+.language-select > svg {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--text-2);
+  pointer-events: none;
 }
 .city-credit {
   display: block;

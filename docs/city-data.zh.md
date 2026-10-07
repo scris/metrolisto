@@ -60,7 +60,8 @@ pnpm format:check      # 检查城市数据及其余项目文件
 | `schemaVersion`     | `1`                        | 协议版本                                                     |
 | `id`                | string                     | 稳定标识，使用小写字母、数字、短横线，如 `shanghai`          |
 | `zhName` / `enName` | string                     | 中文城市名、英文城市名，两项均必填                           |
-| `localName`         | `{name, language}`?        | 可选当地城市名及 BCP 47 语言标签，如 `서울` / `ko`           |
+| `localLanguage`     | string                     | 必填的 BCP 47 当地语言标签，用于选择城市次名                 |
+| `localName`         | `{name, language}`?        | 当地语言不是中文或英文时必填的当地名称及 BCP 47 标签         |
 | `latitude`          | number                     | 城市代表位置的 WGS 84 纬度（十进制度），范围 −90～90，必填   |
 | `longitude`         | number                     | 城市代表位置的 WGS 84 经度（十进制度），范围 −180～180，必填 |
 | `updatedAt`         | string                     | 数据日期，如 `2026-10-03`                                    |
@@ -79,7 +80,7 @@ pnpm format:check      # 检查城市数据及其余项目文件
 
 应用支持 `zh-CN` 和 `en-GB`。首次启动按浏览器语言列表选择支持的语言；其他语言回退到 `en-GB`。在“数据管理 → 语言”可手动切换，选择保存在独立的 `metrolisto.locale.v1` 中，不改变足迹或备份格式。
 
-**城市名必须同时提供中文 `zhName` 和英文 `enName`**，与站点采用哪种语言无关。可选 `localName` 提供当地语言名称，其中 `name` 为非空名称，`language` 为有效的 BCP 47 语言标签。当地名不能替代必填的中文名或英文名；校验器检查字段完整性，名称的实际语言与准确性由贡献者核对。
+**城市名必须同时提供中文 `zhName`、英文 `enName` 和 `localLanguage`**，与站点采用哪种语言无关。`localLanguage` 为有效的 BCP 47 语言标签，指定用于显示的当地语言：中文使用 `zhName`，英文使用 `enName`，其他语言必须提供对应的 `localName`。`localName.name` 为非空名称，`localName.language` 为有效的 BCP 47 标签，基础语言须与 `localLanguage` 相同。当地名不能替代必填的中文名或英文名；名称的实际语言与准确性由贡献者核对。
 
 英文城市名 `enName` 使用首字母大写的常规拼写，例如 `Hangzhou`、`Guangzhou`、`Shenzhen`，不使用全大写形式。
 
@@ -89,11 +90,14 @@ pnpm format:check      # 检查城市数据及其余项目文件
 {
   "zhName": "首尔",
   "enName": "Seoul",
+  "localLanguage": "ko",
   "localName": { "name": "서울", "language": "ko" }
 }
 ```
 
-中文界面以“首尔”为主名，英文界面以“Seoul”为主名；城市选择和数据说明同时补充另一界面语言的名称及“서울”，重复名称只显示一次。省略 `localName` 也有效。此字段仅提供名称，不意味着界面支持韩语。
+城市选择和数据说明的主名固定为当前界面语言：英文模式使用 `enName`，中文模式使用 `zhName`。英文模式的次名为当地语言名称；当地语言为英文时不显示次名。中文模式的次名也为当地语言名称；当地语言为中文时改用 `enName`。中文、英文的地区或文字变体按基础语言判断，例如 `zh-Hant` 属于中文、`en-US` 属于英文。重复名称只显示一次。
+
+例如首尔在英文模式显示“Seoul / 서울”，中文模式显示“首尔 / 서울”；北京在两种模式分别显示“Beijing / 北京”和“北京 / Beijing”；伦敦分别显示“London”和“伦敦 / London”。当地语言为中文或英文时可以省略 `localName`。这些字段不增加对应语言的界面支持。
 
 站点和线路统一使用 **`names` 名称列表**，每项包含 BCP 47 语言标签 `language` 和非空名称 `value`，至少提供一项即可。语言由标签明确指定，不按中文/拉丁字母分组：英文、法文等使用拉丁字母的当地语言同样可以是唯一名称。无需为了满足字段格式而补写另一种语言或重复同一个名称。
 
@@ -136,13 +140,13 @@ pnpm format:check      # 检查城市数据及其余项目文件
 { "kind": "official" }
 ```
 
-表示“由应用开发者维护 / Maintained by the app developer”，用于 MetroListo 第一方维护的北京、上海和伦敦，**不是交通运营方对应用的认证**。
+表示“由应用开发者维护 / Maintainer: App Developer”，用于 MetroListo 第一方维护的北京、上海和伦敦，**不是交通运营方对应用的认证**。
 
 ```json
 { "kind": "community", "name": "Alice" }
 ```
 
-表示“由 Alice 贡献 / Contributed by Alice”。`name` 必须为非空字符串，界面不会将用户称为维护者。旧数据未提供此字段时显示“贡献者未注明”，不会自动归为官方。
+表示“由 Alice 贡献 / Contributor: Alice”。`name` 必须为非空字符串，界面不会将用户称为维护者。旧数据未提供此字段时显示“贡献者未注明”，不会自动归为官方。
 
 **每座城市只维护一份 `src/data/<城市>.json`**：站名直接写入对应 `stations[]` 对象的 `names` 列表，并标注对应语言，例如英文使用 `en`，荷兰语使用 `nl`。线路名称、城市名称、贡献者与来源也在同一文件中，无需额外的翻译目录或生成步骤。JSON 必须使用上文的一条记录一行格式，运行 `pnpm format:city` 或 `pnpm format` 整理。
 

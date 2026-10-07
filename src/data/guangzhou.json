@@ -3,6 +3,7 @@
   "id": "guangzhou",
   "zhName": "广州",
   "enName": "Guangzhou",
+  "localLanguage": "zh-CN",
   "latitude": 23.1291,
   "longitude": 113.2644,
   "updatedAt": "2026-10-04",

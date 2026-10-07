@@ -1,19 +1,29 @@
-import { Fragment } from 'react';
 import type { CityData } from '../types';
 import type { Locale } from '../lib/i18n';
 
-/** City names always have Chinese and English; local names supplement both locales. */
+/** Show the interface name and, when needed, the local-language city name. */
 export default function CityNames({
   city,
   locale,
 }: {
-  city: Pick<CityData, 'zhName' | 'enName' | 'localName'>;
+  city: Pick<CityData, 'zhName' | 'enName' | 'localLanguage' | 'localName'>;
   locale: Locale;
 }) {
   const chinese = { name: city.zhName, language: 'zh-CN' };
   const english = { name: city.enName, language: 'en-GB' };
-  const ordered = locale === 'en-GB' ? [english, chinese] : [chinese, english];
-  if (city.localName) ordered.push(city.localName);
+  const localLanguage = new Intl.Locale(city.localLanguage).language;
+  const localName =
+    localLanguage === 'zh' ? chinese : localLanguage === 'en' ? english : city.localName;
+  const primary = locale === 'en-GB' ? english : chinese;
+  const secondary =
+    locale === 'en-GB'
+      ? localLanguage === 'en'
+        ? undefined
+        : localName
+      : localLanguage === 'zh'
+        ? english
+        : localName;
+  const ordered = secondary ? [primary, secondary] : [primary];
   const seen = new Set<string>();
   const names = ordered.filter(({ name }) => {
     const key = name.trim().normalize().toLowerCase();
@@ -26,12 +36,7 @@ export default function CityNames({
       <span lang={names[0].language}>{names[0].name}</span>
       {names.length > 1 && (
         <small className="city-other-names">
-          {names.slice(1).map(({ name, language }, index) => (
-            <Fragment key={language + name}>
-              {index > 0 && ' · '}
-              <span lang={language}>{name}</span>
-            </Fragment>
-          ))}
+          <span lang={names[1].language}>{names[1].name}</span>
         </small>
       )}
     </>

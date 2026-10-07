@@ -36,6 +36,7 @@ Topology, station names, English names and base schematic coordinates for Hangzh
 - Branch train-change rules follow the existing branching topology and service patterns: [Line 5 dual service patterns](https://jtw.sh.gov.cn/bmts/20201225/be0cf9f1e8fa4fdf8c81b624df3fda7d.html) and [Line 11 Jiading North / Anting service patterns](https://www.shanghai.gov.cn/nw5827/20200905/0001-5827_785606.html). Temporary service changes and frequencies are not simulated.
 - Shanghai Line 4 and Beijing Lines 2 and 10 are closed loops.
 - Jinshan Railway adds a nine-station sequence: Shanghai South Railway Station, Xinzhuang, Chunshen, Xinqiao, Chedun, Yexie, Tinglin, Jinshanyuanqu and Jinshanwei. Shanghai South Railway Station and Xinzhuang share IDs with existing metro stations. Schematic coordinates for this line were added manually.
+- Between Shanghai South Railway Station and Xinzhuang, Jinshan follows Line 1 with a 14-unit gap. Interchange markers join the drawing endpoints; Waihuanlu, Lianhua Rd. and Jinjiang Park retain markers on Line 1 only. The importer reapplies this layout. South of Xinzhuang, Jinshan leaves on its own vertical stem before turning southwest.
 - Yizhuang T1 adds 14 stations from Qu Zhuang to Dinghai Yuan. Rongchang Dongjie shares its ID with the Yizhuang Line to record an interchange accessible on foot. Schematic coordinates for this line were added manually.
 - Capital Airport Express does not infer bidirectional adjacency from the original station order. It explicitly defines a bidirectional Beixinqiao—Dongzhimen—Sanyuan Qiao trunk and a one-way airport loop. The schematic follows the official map’s side-by-side terminals, curved branches on both sides and an inner U-shaped connection, with direction arrows along the outbound, inter-terminal and inbound curves.
 - Bajiao Amusement Park and Tongyunmen in Beijing, and Laoguanli on Yizhuang T1, are absent from the current list of recordable stations. The operating lines serving the first two connect across these unserved stations to the next operating station. Update the snapshot when they open or reopen.
@@ -112,6 +113,8 @@ Rights to map data and names remain with their respective rights holders. This d
 
 ## English names and contributor labels
 
+On 2026-10-07, 41 missing English station names in the Hangzhou metropolitan dataset (7 in Hangzhou and 34 in Shaoxing) were completed from the `multilang.n.en` fields in [Amap Hangzhou data](https://map.amap.com/service/subway?srhdata=3301_drw_hangzhou.json) and [Amap Shaoxing data](https://map.amap.com/service/subway?srhdata=3306_drw_shaoxing.json). An empty legacy `en` field does not mean an English name is unavailable. `jingchang Road` was capitalised as `Jingchang Road`; the other added names retain the source spelling. All 311 stations across Hangzhou, Shaoxing and Haining now have English names, with completeness checked by tests.
+
 Beijing, Shanghai and London are maintained by the MetroListo app developer. Shenzhen and the Guangzhou metropolitan area were contributed by [Hashmapw](https://github.com/Hashmapw); the Hangzhou metropolitan area and Amsterdam were contributed by [scris](https://github.io/scris).
 
 English station names follow operators’ bilingual network maps, preserving proper names, directional abbreviations and English parenthetical text. Proper names are not retranslated when the interface language changes:
@@ -125,4 +128,4 @@ London supplies English-only names and Amsterdam supplies Dutch-only names, both
 
 The Amap converter supports topology and coordinate updates for Shanghai, Beijing, Shenzhen and Guangzhou, preserving verified names, aliases, city metadata and line order. It prompts for missing official English names on new Beijing and Shanghai stations or lines, and tests check bilingual completeness. Other cities can contribute JSON directly using the same schema.
 
-Community-contributed cities use `attribution: { "kind": "community", "name": "Contributor name" }`, displayed as “Contributed by 〈name〉”. See the [City data schema](city-data.en.md) for field requirements.
+Community-contributed cities use `attribution: { "kind": "community", "name": "Contributor name" }`, displayed as “Contributor: 〈name〉”. See the [City data schema](city-data.en.md) for field requirements.

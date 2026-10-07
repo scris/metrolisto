@@ -3,6 +3,7 @@
   "id": "amsterdam",
   "zhName": "阿姆斯特丹",
   "enName": "Amsterdam",
+  "localLanguage": "nl",
   "localName": { "name": "Amsterdam", "language": "nl" },
   "latitude": 52.3676,
   "longitude": 4.9041,

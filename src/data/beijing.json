@@ -3,6 +3,7 @@
   "id": "beijing",
   "zhName": "北京",
   "enName": "Beijing",
+  "localLanguage": "zh-CN",
   "latitude": 39.9042,
   "longitude": 116.4074,
   "updatedAt": "2026-10-03",

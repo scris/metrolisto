@@ -14,6 +14,7 @@ import {
   CircleHelp,
   Download,
   Footprints,
+  Github,
   Globe2,
   HardDrive,
   Layers2,
@@ -49,6 +50,7 @@ import CityNames from './components/CityNames';
 
 type Page = 'map' | 'journal' | 'lines';
 const LAST_CITY_KEY = 'metrolisto.last-city.v1';
+const PROJECT_URL = 'https://github.com/scris/metrolisto';
 
 function useMedia(query: string) {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -1088,9 +1090,9 @@ export default function App() {
         placement={isMobile ? 'bottom' : 'center'}
         onClose={() => setCityOpen(false)}
         destroyOnClose
-        className="app-popup"
+        className="app-popup city-popup"
       >
-        <div className="sheet">
+        <div className="sheet city-sheet">
           <div className="sheet-head">
             <div>
               <h2>{t('选择城市')}</h2>
@@ -1098,27 +1100,37 @@ export default function App() {
             </div>
             {closeButton(t('关闭城市选择'), () => setCityOpen(false))}
           </div>
-          {sortedCities.map((c) => (
-            <button
-              className={`city-option ${c.id === cityId ? 'selected' : ''}`}
-              key={c.id}
-              onClick={() => changeCity(c.id)}
-            >
-              <span className="city-option-icon">
-                <TrainFront size={22} />
-              </span>
-              <div>
-                <strong>
-                  <CityNames city={c} locale={locale} />
-                </strong>
-                <p>
-                  <span className="city-credit">{contributionLabel(c, locale)}</span>
-                  {t('{0} 条线路 · {1} 个站点', c.lines.length, c.stations.length)}
-                </p>
-              </div>
-              {c.id === cityId ? <Check size={18} /> : <ChevronRight size={18} />}
-            </button>
-          ))}
+          <div className="city-options">
+            {sortedCities.map((c) => (
+              <button
+                className={`city-option ${c.id === cityId ? 'selected' : ''}`}
+                key={c.id}
+                onClick={() => changeCity(c.id)}
+              >
+                <span className="city-option-icon">
+                  <TrainFront size={22} />
+                </span>
+                <div>
+                  <strong>
+                    <CityNames city={c} locale={locale} />
+                  </strong>
+                  <p>
+                    <span className="city-credit">{contributionLabel(c, locale)}</span>
+                    {t('{0} 条线路 · {1} 个站点', c.lines.length, c.stations.length)}
+                  </p>
+                </div>
+                {c.id === cityId ? <Check size={18} /> : <ChevronRight size={18} />}
+              </button>
+            ))}
+          </div>
+          <p className="city-contribution">
+            {t('如果还没有提供你的家乡或旅游目的地的线网，欢迎在')}&nbsp;
+            <a href={PROJECT_URL} target="_blank" rel="noreferrer">
+              {t('项目 GitHub')}
+            </a>
+            &nbsp;
+            {t('上贡献。我们也接受经过人类审阅的 AI 生成结果。')}
+          </p>
         </div>
       </Popup>
       <Popup
@@ -1182,13 +1194,16 @@ export default function App() {
           </div>
           <label className="language-setting">
             <span>{t('语言')}</span>
-            <select
-              value={locale}
-              onChange={(event) => setLocale(event.target.value as 'zh-CN' | 'en-GB')}
-            >
-              <option value="zh-CN">简体中文</option>
-              <option value="en-GB">English (UK)</option>
-            </select>
+            <span className="language-select">
+              <select
+                value={locale}
+                onChange={(event) => setLocale(event.target.value as 'zh-CN' | 'en-GB')}
+              >
+                <option value="zh-CN">简体中文</option>
+                <option value="en-GB">English (UK)</option>
+              </select>
+              <ChevronDown size={16} aria-hidden="true" />
+            </span>
           </label>
           <div className="info-box">
             <HardDrive size={20} />
@@ -1213,6 +1228,15 @@ export default function App() {
             </div>
             <ChevronRight size={18} />
           </button>
+          <hr className="action-divider" />
+          <a className="action-row" href={PROJECT_URL} target="_blank" rel="noreferrer">
+            <Github size={20} />
+            <div>
+              <strong>{t('项目 GitHub')}</strong>
+              <small>scris/metrolisto</small>
+            </div>
+            <ArrowUpRight size={18} />
+          </a>
           <p className="privacy">
             <ShieldCheck size={15} />
             {t('全地铁不会上传你的足迹。')}

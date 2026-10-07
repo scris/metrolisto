@@ -9,6 +9,7 @@ const fields = {
     'id',
     'zhName',
     'enName',
+    'localLanguage',
     'localName',
     'latitude',
     'longitude',

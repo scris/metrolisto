@@ -60,7 +60,8 @@ This rule reduces misleading line counts caused by expanded multilingual names a
 | `schemaVersion`     | `1`                        | Schema version                                                                                   |
 | `id`                | string                     | Stable identifier using lowercase letters, digits and hyphens, such as `shanghai`                |
 | `zhName` / `enName` | string                     | Chinese and English city names; both are required                                                |
-| `localName`         | `{name, language}`?        | Optional local-language city name and BCP 47 language tag, such as `서울` / `ko`                 |
+| `localLanguage`     | string                     | Required BCP 47 local-language tag selecting the secondary city name                             |
+| `localName`         | `{name, language}`?        | Local city name and BCP 47 tag; required for local languages other than Chinese or English       |
 | `latitude`          | number                     | Required WGS 84 latitude of a representative city location in decimal degrees, from −90 to 90    |
 | `longitude`         | number                     | Required WGS 84 longitude of a representative city location in decimal degrees, from −180 to 180 |
 | `updatedAt`         | string                     | Data date, such as `2026-10-03`                                                                  |
@@ -79,7 +80,7 @@ The city selector uses the currently open city as its origin and sorts cities fr
 
 The app supports `zh-CN` and `en-GB`. On first launch, it selects a supported language from the browser’s language list; other languages fall back to `en-GB`. Users can switch manually in “Data management → Language”. The choice is saved separately in `metrolisto.locale.v1` and does not change journey records or the backup format.
 
-**City names must include both Chinese `zhName` and English `enName`**, regardless of the languages used for station names. Optional `localName` supplies a local-language name, with a non-empty `name` and a valid BCP 47 `language` tag. It cannot replace either required city name. The validator checks field completeness; contributors must verify the actual language and accuracy of the names.
+**City names must include Chinese `zhName`, English `enName` and `localLanguage`**, regardless of the languages used for station names. `localLanguage` is a valid BCP 47 tag selecting the local language used for display: Chinese uses `zhName`, English uses `enName`, and other languages require a corresponding `localName`. Its `name` must be non-empty and its valid BCP 47 `language` tag must share the base language of `localLanguage`. It cannot replace either required city name. Contributors must verify the actual language and accuracy of the names.
 
 Use conventional capitalisation for English city names in `enName`, such as `Hangzhou`, `Guangzhou` and `Shenzhen`, rather than all capitals.
 
@@ -89,11 +90,14 @@ For example, Seoul’s city name fields could be written as follows. This illust
 {
   "zhName": "首尔",
   "enName": "Seoul",
+  "localLanguage": "ko",
   "localName": { "name": "서울", "language": "ko" }
 }
 ```
 
-The Chinese interface uses “首尔” as the primary name, and the English interface uses “Seoul”. The city selector and data information also show the name in the other interface language and “서울”, displaying duplicate names only once. Omitting `localName` is valid. This field only supplies a name; it does not add a Korean interface.
+In the city selector and data information, the primary name always follows the interface language: `enName` in English mode and `zhName` in Chinese mode. English mode shows the local-language name as the secondary name, unless the local language is English, when no secondary name is shown. Chinese mode also shows the local-language name as the secondary name, but uses `enName` when the local language is Chinese. Regional and script variants are matched by base language, so `zh-Hant` is Chinese and `en-US` is English. Duplicate names appear only once.
+
+For example, Seoul displays “Seoul / 서울” in English and “首尔 / 서울” in Chinese; Beijing displays “Beijing / 北京” and “北京 / Beijing”; London displays “London” and “伦敦 / London”. `localName` may be omitted when the local language is Chinese or English. These fields do not add an interface in the corresponding language.
 
 Stations and lines use **`names` lists**. Each entry has a BCP 47 `language` tag and a non-empty `value`, and each list needs at least one entry. The tag explicitly identifies the language, rather than grouping names by Chinese or Latin script. A local language written in Latin script, such as English or French, can also be the only name. There is no need to add another language or duplicate a name simply to satisfy the field format.
 
@@ -136,13 +140,13 @@ Optional `attribution` identifies who provided or maintains the data:
 { "kind": "official" }
 ```
 
-This displays “Maintained by the app developer” and is used for Beijing, Shanghai and London, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
+This displays “Maintainer: App Developer” and is used for Beijing, Shanghai and London, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
 
 ```json
 { "kind": "community", "name": "Alice" }
 ```
 
-This displays “Contributed by Alice”. `name` must be a non-empty string, and the interface does not label community users as maintainers. Older data without this field displays “Contributor not specified” and is not automatically classified as official.
+This displays “Contributor: Alice”. `name` must be a non-empty string, and the interface does not label community users as maintainers. Older data without this field displays “Contributor not specified” and is not automatically classified as official.
 
 **Maintain just one `src/data/<city>.json` per city.** Put station names directly in each `stations[]` object’s `names` list with the corresponding language tag, such as `en` for English or `nl` for Dutch. Line names, city names, contributors and sources belong in the same file, without an extra translation directory or generation step. JSON must use the one-record-per-line format above; run `pnpm format:city` or `pnpm format` to apply it.
 
