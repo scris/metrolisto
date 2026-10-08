@@ -2,7 +2,7 @@
 
 [English](data-sources.en.md) | 简体中文
 
-快照日期为 2026-10-03，杭州及广州补充于 2026-10-04，伦敦及阿姆斯特丹补充于 2026-10-05。运行时使用仓库内的 JSON，不在线请求地图 API。
+快照日期为 2026-10-03，杭州及广州补充于 2026-10-04，伦敦及阿姆斯特丹补充于 2026-10-05，里斯本、瓦伦西亚及马拉加补充于 2026-10-08。运行时使用仓库内的 JSON，不在线请求地图 API。
 
 ## 主要来源
 
@@ -60,7 +60,7 @@
 
 以 2026 年 9 月版 [TfL Tube map](https://content.tfl.gov.uk/standard-tube-map.pdf) 及用户提供的[大字版](https://content.tfl.gov.uk/large-print-tube-map.pdf)为范围和英文站名依据，包含全部 11 条 Underground、六条具名 Overground、Elizabeth line、DLR、London Trams 和 London Cable Car；不含 Thameslink、普通公交、水上巴士及其他国铁服务。共 21 条线路、464 个站点或站内综合体、616 个按线路区分的区间。站名仅用英文，独立车站增加模式括注以区分。坐标和折线经过示意化调整，不直接复刻原 PDF 图形。
 
-- 共线段保留各线独立记录，绘图连续平行经过中间站，站点符号连接实际绘制端点。包括 Circle/Hammersmith & City/Metropolitan、Circle/District、District/Piccadilly、District/Hammersmith & City、Bakerloo/Lioness、Metropolitan/Piccadilly、District/Mildmay、Mildmay/Windrush，以及 Heathrow 的 Elizabeth/Piccadilly 共线段等。Piccadilly 绘图经过不停车的 District 站点坐标，但不增加停站或路由区间。除这类保持 14 单位间距的平行共线外，线路折线不得穿过不停靠车站的站点符号，不同线路在站间也不应重叠绘制（如 Waterloo & City 与 District、Jubilee 与 DLR Stratford 支线、Elizabeth 与 Central 均分开绘制）；`mapGeometry.test.ts` 会检查伦敦和阿姆斯特丹的这一约束，调整坐标后须重新运行。Circle 在 Paddington–Edgware Road 的南北两种进路分别建模，Hammersmith–市中心绕行–Edgware Road 交路不作为连续环线。
+- 共线段保留各线独立记录，绘图连续平行经过中间站，站点符号连接实际绘制端点。包括 Circle/Hammersmith & City/Metropolitan、Circle/District、District/Piccadilly、District/Hammersmith & City、Bakerloo/Lioness、Metropolitan/Piccadilly、District/Mildmay、Mildmay/Windrush，以及 Heathrow 的 Elizabeth/Piccadilly 共线段等。Piccadilly 绘图经过不停车的 District 站点坐标，但不增加停站或路由区间。除这类保持 14 单位间距的平行共线外，线路折线不得穿过不停靠车站的站点符号，不同线路在站间也不应重叠绘制（如 Waterloo & City 与 District、Jubilee 与 DLR Stratford 支线、Elizabeth 与 Central 均分开绘制）；`mapGeometry.test.ts` 会检查伦敦、阿姆斯特丹、里斯本、瓦伦西亚和马拉加的这一约束，调整坐标后须重新运行。Circle 在 Paddington–Edgware Road 的南北两种进路分别建模，Hammersmith–市中心绕行–Edgware Road 交路不作为连续环线。
 - 站内换乘共用 ID。Bank/Monument、Paddington 相连的 Underground 站台归为站内综合体，因此站点数与 TfL 独立车站计数不同。Hackney Central/Downs 有站内连接通道，合并记录。需出站步行的 Hammersmith、Edgware Road、Bethnal Green、Shepherd’s Bush、West Hampstead、Shadwell、三座 Canary Wharf 和 West Croydon 保留独立站点；Woolwich 与 Woolwich Arsenal 也不合并，不推断步行边。
 - Underground 支线换车参照 [TfL 工作时刻表](https://tfl.gov.uk/corporate/publications-and-reports/working-timetables)。Hainault–Woodford 按 [Central WTT 70](https://content.tfl.gov.uk/cen-wtt-70.pdf) 的常规接驳交路处理；目录已列出 WTT 71，但未能获取其详细 PDF，因此不推断高峰限定直通交路。District 的 Olympia–High Street Kensington、Wimbledon–Edgware Road 保留直达。Piccadilly 的 Terminal 4 回路方向为 Hatton Cross → Terminal 4 → Terminals 2 & 3，列车不在 Hatton Cross 折返，从 Terminals 2 & 3 一侧经 Hatton Cross 前往 Terminal 4 计一次换车；Northern 在 Euston 的 Bank 支线与 Charing Cross 支线站台不贯通，Camden Town–Warren Street 直达需经 Mornington Crescent，King’s Cross St Pancras 与 Mornington Crescent、Warren Street 之间在 Euston 换车；Turnham Green 虽仅部分时段停靠，仍纳入拓扑。
 - [2026 年 5 月 17 日起的 Overground 时刻表](https://tfl.gov.uk/modes/london-overground/london-overground-timetables)用于核对交路。Windrush 维护 Highbury–Crystal Palace/West Croydon 和 Dalston Junction–Clapham Junction/New Cross 直通路径，Highbury 前往后两条分支需在共线段换车。Mildmay、Weaver 保留各分支。Battersea Park 的少量 Windrush 服务不在 Tube map 范围内。
@@ -93,6 +93,47 @@
 
 可下载的 [GVB Metrokaart（附 2025 夏季施工标记）](https://assets.ctfassets.net/d6yaib7us1l3/30k69FRENe3aHXpQdpfip4/69b57e56535f1454b1ab4d728cee1b76/Metrokaart_2025_-_zomerwerk.pdf)仅辅助核对站名、大致位置与线路颜色，不采用其临时停运或替代运输覆盖层作为运营拓扑。坐标和折线为应用手工编排。[GVB 新编号及交路计划](https://over.gvb.nl/nieuws/nieuwe-lijnnummers-en-kleuren-maken-amsterdamse-metro-overzichtelijker/)从 2028 年时刻表开始实施，不提前纳入本次 2026 快照；夏季施工及其他临时调整也不纳入。阿姆斯特丹直接维护城市 JSON，后续更新应保留已有 ID。
 
+## 里斯本（2026-10-08）
+
+范围为运营中的 Metropolitano de Lisboa 线网，共 4 条线路、50 个独立站点、52 个区间；中英文界面均显示葡萄牙语站名。站序、换乘与排版参照运营方[地图与线网图页](https://www.metrolisboa.pt/viajar/mapas-e-diagramas/)提供的 [2026 年 8 月版线网图](https://www.metrolisboa.pt/wp-content/uploads/2026/08/DiagramaRedeAgosto2026.pdf)。不含 CP 铁路、Fertagus、Transtejo 渡轮、Carris 电车及公交。
+
+| 线路     | 终点                     | 站数 |
+| -------- | ------------------------ | ---- |
+| Azul     | Reboleira–Santa Apolónia | 18   |
+| Amarela  | Odivelas–Rato            | 13   |
+| Verde    | Telheiras–Cais do Sodré  | 13   |
+| Vermelha | Aeroporto–São Sebastião  | 12   |
+
+Campo Grande、Marquês de Pombal、Baixa-Chiado、Alameda、Saldanha、São Sebastião 各使用统一 ID；没有共轨区间，因此无需平行绘制。Restauradores 与 Rossio、Cais do Sodré 与 Santa Apolónia 保留独立站点，不添加虚构步行接驳。Rato–Cais do Sodré 之间新增 Estrela、Santos 的[环线工程](https://projetos.metrolisboa.pt/expansao/)[预计 2027 年第一季度启用](https://www.timeout.pt/lisboa/pt/noticias/atraso-vai-em-tres-anos-e-tres-meses-mas-metro-aponta-abertura-da-linha-circular-para-inicio-de-2027-040126)，本次不纳入；待运营方公布最终交路后再调整黄、绿两线。线路名使用官方颜色名（如 `Linha Azul`），简称为颜色。坐标沿用线网图的 45° 排版，为应用手工编排。
+
+## 瓦伦西亚（2026-10-08）
+
+范围为 FGV 运营的 Metrovalencia 完整线网，共 10 条线路、144 个独立站点、216 个按线路区分的区间；中英文界面均显示瓦伦西亚语站名。站序、支线交路及单向区间取自 [FGV Metrovalencia GTFS 数据](https://www.metrovalencia.es/google_transit_feed/google_transit.zip)（[Mobility Database](https://mobilitydatabase.org/feeds/gtfs/mdb-2830) 收录的快照，日历自 2026 年 9 月起），并与[官方线网图](https://www.redtransporte.com/img/transporte/valencia/metro-valencia/plano-metro-valencia.pdf)交叉核对站名、换乘与位置。不含 Renfe Cercanías、EMT 公交及规划中的 11、12 号线。
+
+| 线路 | 常规终点                                                         | 站数 | 模式 |
+| ---- | ---------------------------------------------------------------- | ---- | ---- |
+| L1   | Bétera–Castelló                                                  | 40   | 地铁 |
+| L2   | Llíria–Torrent Avinguda                                          | 34   | 地铁 |
+| L3   | Rafelbunyol–Aeroport                                             | 27   | 地铁 |
+| L4   | Mas del Rosari / Ll. Llarga-Terramelar / Fira València–Dr. Lluch | 33   | 电车 |
+| L5   | Marítim–Aeroport                                                 | 18   | 地铁 |
+| L6   | Tossal del Rei–Marítim                                           | 21   | 电车 |
+| L7   | Marítim–Torrent Avinguda                                         | 16   | 地铁 |
+| L8   | Marítim–Neptú                                                    | 4    | 电车 |
+| L9   | Alboraia Peris Aragó–Riba-roja de Túria                          | 23   | 地铁 |
+| L10  | Alacant–Natzaret                                                 | 8    | 电车 |
+
+- 共轨区间各线保留独立收藏记录和绘图路径，以 14 单位间距连续平行经过中间站，站点符号横跨各线。L1/L2 共线 Empalme–Torrent，L7 自 Jesús 起与之并行至 Torrent Avinguda；L3/L5/L9 共线 Alameda–Roses（L9 往 Riba-roja，L3/L5 往 Aeroport），L3/L9 共线 Alboraia Peris Aragó–Alameda，L5/L7 共线 Marítim–Colón，L4/L6 共线 Trinitat–Beteró 及海滨环路，L6/L8 共线 Marítim–Grau-La Marina。`mapGeometry.test.ts` 检查线路不穿过不停靠站点。
+- GTFS 中少量非常规班次不作为线路归属：L1 开往 Torrent Avinguda 的班次、L3 单趟开往 Riba-roja de Túria 的班次、L5 和 L7 经 Facultats 开往 Machado 的班次，以及 L8 早晚绕行海滨环路的班次。L2 部分班次跳停 Font del Barranc 属停站方案差异，不是独立区间。
+- L4 西端有三条支线：Mas del Rosari 与 Ll. Llarga-Terramelar 在 À Punt 汇合，Fira València 支线在 Vicent Andrés Estellés 汇入。`sameLineTransfers` 将两站的支线间换车计为换乘，主干至任一支线仍算直达。
+- Cabanyal–Malva-rosa 电车环路为单向：La Cadena → Platja Malva-rosa → Platja les Arenes → Dr. Lluch → Cabanyal → La Cadena，L4 以 Dr. Lluch 为终点，经 `sameLineTransfers` 将在该站继续绕行计为换车。L6 开往 Marítim 方向不经 Dr. Lluch（Platja les Arenes → Canyamelar），开往 Tossal del Rei 方向经 Dr. Lluch、Cabanyal；因此 L6 声明两条单向 `services`，Dr. Lluch 前往 Marítim 需在 La Cadena 换乘南行电车。
+- L10 为独立运营分量。[Alacant–Xàtiva 步行通道](https://www.elperiodic.com/valencia/nuevo-tunel-subterraneo-metro-conecta-valencia-subsuelo_1029812)于 2025 年 12 月启用，但连接的是两座车站，因此保留各自 ID，不添加虚构铁路区间；Bailén 与 Xàtiva 同理。连通性测试按独立分量断言 L10。
+- 站名沿用 FGV 瓦伦西亚语形式，如 `Pl. Espanya`、`Av. del Cid`、`Dr. Lluch`、`Vicent Zaragozà`、`Ll. Llarga-Terramelar`；`Plaza España`、`Doctor Lluch`、`Villanueva de Castellón`、`Aeropuerto` 等西班牙语或展开形式作为搜索别名。站名语言标签为 `ca-ES-valencia`。线路颜色采用 GTFS `route_color`；L5 的数据颜色不可用，取自官方线网图的绿色。
+
+## 马拉加（2026-10-08）
+
+范围为运营中的 Metro de Málaga 线网，共 2 条线路、19 个独立站点、19 个区间；中英文界面均显示西班牙语站名。站序参照[安达卢西亚自治区政府线网概况](https://www.juntadeandalucia.es/organismos/aopja/areas/infraestructuras-ferroviarias/metro-malaga.html)及其[乘坐指南与站点目录](https://www.juntadeandalucia.es/sites/default/files/inline-files/2025/02/GU%C3%8DA%20DE%20USO_Viajar%20en%20Metro%20%28.pdf%29.pdf)；[2023 年 3 月市中心延伸段](https://www.urban-transport-magazine.com/en/metro-malaga-reaches-the-inner-city-centre/)新增 Guadalmedina 和 Atarazanas。1 号线 Andalucía Tech–Atarazanas（13 站），2 号线 Palacio de los Deportes–Guadalmedina（8 站）；两线共线 El Perchel–Guadalmedina 并平行绘制，Atarazanas 仅 1 号线停靠。不建模 María Zambrano 的 Cercanías，`María Zambrano` 作为 El Perchel 的搜索别名。2 号线往 Hilera、La Trinidad、Hospital Civil 的延伸段[仍在施工](https://www.canalsur.es/noticias/andalucia/malaga/moreno-inaugura-la-ampliacion-del-metro-de-malaga-hasta-el-hospital-civil/2180651.html)，不纳入。坐标为应用手工编排。
+
 ## 更新数据
 
 将新的高德 JSON 下载到本地后运行，转换器按文件内的城市代码只更新传入的城市：
@@ -115,7 +156,7 @@ pnpm build
 
 杭州都市圈于 2026-10-07 补齐 41 个缺失英文站名（杭州 7 个、绍兴 34 个），取自[高德杭州数据](https://map.amap.com/service/subway?srhdata=3301_drw_hangzhou.json)与[高德绍兴数据](https://map.amap.com/service/subway?srhdata=3306_drw_shaoxing.json)的 `multilang.n.en` 字段；旧 `en` 字段为空不代表没有英文名。荆长路的 `jingchang Road` 统一首字母为 `Jingchang Road`，其余补充名称保留来源拼写。当前杭州、绍兴、海宁共 311 个站点均提供英文名，测试检查完整性。
 
-北京、上海、伦敦由 MetroListo 应用开发者维护；深圳、广州都市圈由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州都市圈与阿姆斯特丹由 [scris](https://github.io/scris) 贡献。
+北京、上海、伦敦、里斯本、瓦伦西亚、马拉加由 MetroListo 应用开发者维护；深圳、广州都市圈由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州都市圈与阿姆斯特丹由 [scris](https://github.io/scris) 贡献。
 
 英文站名参照运营方双语线网图，保留其专名、方向缩写和英文括注，不按界面语言重新翻译专名：
 
@@ -124,7 +165,7 @@ pnpm build
 - 深圳：[深圳地铁官方双语线网图](https://www.szmc.net/SMARTC/upload/image/20260630/1782803829923076269.png)，包含坪山云巴小图；例如 `Window of the World`、`SUAT`、`Airport (T3)`。
 - 广州：[广州地铁官方双语线网图（2026-07-30）](https://cs.gzmtr.com/ckfw/xlu_2020/202607/W020260730790914610429.png)，包含广佛线及佛山 2、3 号线；例如 `Xiaode Dong`、`Luocun`、`Qiandeng Lake`。
 
-伦敦仅提供英文名称，阿姆斯特丹仅提供荷兰语名称，均使用现有界面名称回退规则。中国城市的中英文站名统一存放在 `src/data/<city>.json` 的 `names` 列表中（`zh-CN` / `en`），其他名称、来源与贡献者也在同一文件维护。`aliases` 仅用于搜索别名。
+伦敦仅提供英文名称，阿姆斯特丹仅提供荷兰语名称，里斯本仅提供葡萄牙语名称，瓦伦西亚仅提供瓦伦西亚语名称，马拉加仅提供西班牙语名称，均使用现有界面名称回退规则；搜索忽略变音符号，无需另加无重音别名。中国城市的中英文站名统一存放在 `src/data/<city>.json` 的 `names` 列表中（`zh-CN` / `en`），其他名称、来源与贡献者也在同一文件维护。`aliases` 仅用于搜索别名。
 
 高德转换器支持上海、北京、深圳和广州的拓扑与坐标更新，保留已核对的名称、别名、城市元数据和线路顺序。北京、上海新增站点或线路缺少官方英文名时会提示补齐，测试会检查双语完整性。其他城市可直接按统一协议贡献 JSON。
 

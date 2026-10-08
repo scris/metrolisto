@@ -42,7 +42,7 @@ iOS uses Swift Package Manager. See [Native app development](docs/native-apps.en
 ## Features
 
 - English and Simplified Chinese interfaces, with automatic browser language detection and a saved language setting in Data management.
-- Beijing, Shanghai and London are maintained by the app developer. Shenzhen and Guangzhou were contributed by [Hashmapw](https://github.com/Hashmapw); Hangzhou and Amsterdam were contributed by [scris](https://github.io/scris). Additional cities support named community contributors, and stations may provide only a local-language or English name.
+- Beijing, Shanghai and London are maintained by the app developer. Shenzhen and Guangzhou were contributed by [Hashmapw](https://github.com/Hashmapw); Hangzhou, Amsterdam, Lisbon, Valencia and Málaga were contributed by [scris](https://github.io/scris). Additional cities support named community contributors, and stations may provide only a local-language or English name.
 - Cities must have both English and Chinese names and may include a local-language name, such as Seoul / 首尔 / 서울. Stations may provide only English, Chinese or a local-language name.
 - Shanghai: **22 lines, 425 unique stations and 520 segments**, including the Airport Link Line, Maglev and Jinshan Railway, including Xinzhuang station.
 - Beijing: **28 lines, 422 unique stations and 514 segments**, including Yizhuang T1 tram, Xijiao Line, Capital Airport Express and Daxing Airport Express; suburban railways are excluded.
@@ -51,6 +51,9 @@ iOS uses Swift Package Manager. See [Native app development](docs/native-apps.en
 - Hangzhou: **15 lines, 311 unique stations and 347 segments**, including Shaoxing Lines 1 and 2 and the Hangzhou–Haining Intercity Railway, with the branches of Hangzhou Lines 3 and 6 and Shaoxing Line 1 fully preserved.
 - London: **21 lines, 464 unique station complexes/stops and 616 segments**, covering all TfL modes on the Tube map: Underground, six Overground lines, Elizabeth line, DLR, Trams and Cable Car. Thameslink, buses and River Bus are excluded; station names are English only.
 - Amsterdam: **5 lines, 39 unique stations and 71 segments**, covering GVB metro M50–M54 with Dutch station names. Trams, buses, ferries and NS rail are excluded.
+- Lisbon: **4 lines, 50 unique stations and 52 segments**, covering the Blue, Yellow, Green and Red lines with Portuguese station names. CP rail, Fertagus, ferries and the Estrela–Santos section under construction are excluded.
+- Valencia: **10 lines, 144 unique stations and 216 segments**, covering Metrovalencia metro Lines 1, 2, 3, 5, 7 and 9 and tram Lines 4, 6, 8 and 10 with Valencian station names, including the one-way Cabanyal–Malva-rosa tram loop. Renfe Cercanías and EMT buses are excluded; L10 is a separate operating component.
+- Málaga: **2 lines, 19 unique stations and 19 segments**, covering Metro de Málaga Lines 1 and 2 with Spanish station names. Cercanías, buses and the Hospital Civil extension under construction are excluded.
 - An SVG schematic network map with dragging, wheel zoom, pinch zoom, fit-to-network, line filters and station search. Station labels adjust to avoid overlap as you zoom.
 - Choose boarding and alighting stations plus up to three ordered transfer stations. Each selected transfer station must involve an actual change of train. Choose between balanced recommendations and fewest transfers.
 - Preview the complete route and its station lists by leg, then confirm to mark the endpoints, actual transfer stations and travelled segments, while recording stations passed through separately.
@@ -71,7 +74,7 @@ Each city’s names, station names, lines, sources and contributor are maintaine
 
 ## Data and limitations
 
-The bundled data snapshot is dated **2026-10-03**, with additions for Hangzhou and Guangzhou on **2026-10-04**, and London and Amsterdam on **2026-10-05**. The Chinese networks use Amap’s public metro data; London uses TfL maps and timetables, and Amsterdam uses GVB maps and route information. For supplemented official sources, see [Data sources](docs/data-sources.en.md). Stations that share a name but operate separately keep distinct IDs and are not automatically treated as interchanges.
+The bundled data snapshot is dated **2026-10-03**, with additions for Hangzhou and Guangzhou on **2026-10-04**, London and Amsterdam on **2026-10-05**, and Lisbon, Valencia and Málaga on **2026-10-08**. The Chinese networks use Amap’s public metro data; London uses TfL maps and timetables, Amsterdam uses GVB maps and route information, Lisbon uses the Metropolitano de Lisboa network diagram, Valencia uses the FGV GTFS feed and official network map, and Málaga uses Junta de Andalucía and operator information. For supplemented official sources, see [Data sources](docs/data-sources.en.md). Stations that share a name but operate separately keep distinct IDs and are not automatically treated as interchanges.
 
 This project records personal travel history. London’s Cable Car is a separate operating component because external walking links are not modeled. Service paths combine recurring ordinary patterns, without resolving their availability at a particular date or time. Routing uses adjacent segments, train-change costs and optional direct service paths, without train timetables, service frequencies, fares, capacity restrictions, service suspensions or precise walking times. The airport lines and Jinshan Railway are also shown as adjacent-station topology, which does not represent the stopping pattern of every train.
 

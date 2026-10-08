@@ -257,14 +257,18 @@ export function findRoute(
   return null;
 }
 
+/** Case-, whitespace- and diacritic-insensitive, so "sao sebastiao" matches São Sebastião. */
+const searchKey = (value: string) =>
+  value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s/g, '');
+
 export function searchStations(network: Network, query: string, transferOnly = false) {
-  const normalized = query.toLowerCase().replace(/\s/g, '');
+  const normalized = searchKey(query);
   return network.city.stations.filter(
     (s) =>
       (!transferOnly || isTransferStation(network, s.id)) &&
       (!normalized ||
         [...s.names.map((name) => name.value), ...(s.aliases ?? [])].some((v) =>
-          v.toLowerCase().replace(/\s/g, '').includes(normalized),
+          searchKey(v).includes(normalized),
         )),
   );
 }

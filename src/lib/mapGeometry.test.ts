@@ -5,7 +5,7 @@ import example from '../../docs/city.example.json';
 import { stationSpans } from './mapGeometry';
 
 describe('parallel station markers', () => {
-  it.each(['london', 'guangzhou', 'shanghai'])(
+  it.each(['london', 'guangzhou', 'shanghai', 'valencia', 'malaga'])(
     '%s: encloses the drawing endpoints at shared stops and branches',
     (id) => {
       const city = cities.find((c) => c.id === id)!;
@@ -35,41 +35,44 @@ describe('parallel station markers', () => {
     },
   );
 
-  it.each(['london', 'amsterdam'])('%s: draws no line through a stop it does not serve', (id) => {
-    const city = cities.find((c) => c.id === id)!;
-    const anchors = new Map(city.stations.map((s) => [s.id, [s.x, s.y] as Point]));
-    const markers = new Map(city.stations.map((s) => [s.id, [] as Point[]]));
-    const path = (edge: CityData['segments'][number]) =>
-      edge.points ?? [anchors.get(edge.from)!, anchors.get(edge.to)!];
-    for (const edge of city.segments) {
-      markers.get(edge.from)!.push(path(edge)[0]);
-      markers.get(edge.to)!.push(path(edge).at(-1)!);
-    }
-    const distance = (p: Point, a: Point, b: Point) => {
-      const dx = b[0] - a[0],
-        dy = b[1] - a[1];
-      const t = Math.max(
-        0,
-        Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)),
+  it.each(['london', 'amsterdam', 'lisbon', 'valencia', 'malaga'])(
+    '%s: draws no line through a stop it does not serve',
+    (id) => {
+      const city = cities.find((c) => c.id === id)!;
+      const anchors = new Map(city.stations.map((s) => [s.id, [s.x, s.y] as Point]));
+      const markers = new Map(city.stations.map((s) => [s.id, [] as Point[]]));
+      const path = (edge: CityData['segments'][number]) =>
+        edge.points ?? [anchors.get(edge.from)!, anchors.get(edge.to)!];
+      for (const edge of city.segments) {
+        markers.get(edge.from)!.push(path(edge)[0]);
+        markers.get(edge.to)!.push(path(edge).at(-1)!);
+      }
+      const distance = (p: Point, a: Point, b: Point) => {
+        const dx = b[0] - a[0],
+          dy = b[1] - a[1];
+        const t = Math.max(
+          0,
+          Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)),
+        );
+        return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+      };
+      const crossings = city.segments.flatMap((edge) =>
+        city.stations
+          .filter(
+            (s) =>
+              s.id !== edge.from &&
+              s.id !== edge.to &&
+              markers
+                .get(s.id)!
+                .some((p) =>
+                  path(edge).some((b, i, all) => i > 0 && distance(p, all[i - 1], b) < 12),
+                ),
+          )
+          .map((s) => `${edge.id} @ ${s.names[0].value}`),
       );
-      return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
-    };
-    const crossings = city.segments.flatMap((edge) =>
-      city.stations
-        .filter(
-          (s) =>
-            s.id !== edge.from &&
-            s.id !== edge.to &&
-            markers
-              .get(s.id)!
-              .some((p) =>
-                path(edge).some((b, i, all) => i > 0 && distance(p, all[i - 1], b) < 12),
-              ),
-        )
-        .map((s) => `${edge.id} @ ${s.names[0].value}`),
-    );
-    expect(crossings).toEqual([]);
-  });
+      expect(crossings).toEqual([]);
+    },
+  );
 
   it('places a single-line stop on its offset track without spanning a non-stopping line', () => {
     const city = structuredClone(example) as CityData;

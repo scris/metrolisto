@@ -101,7 +101,7 @@ For example, Seoul displays “Seoul / 서울” in English and “首尔 / 서�
 
 Stations and lines use **`names` lists**. Each entry has a BCP 47 `language` tag and a non-empty `value`, and each list needs at least one entry. The tag explicitly identifies the language, rather than grouping names by Chinese or Latin script. A local language written in Latin script, such as English or French, can also be the only name. There is no need to add another language or duplicate a name simply to satisfy the field format.
 
-Display selects names in this order: an exact match for the interface language → the first name with the same base language, such as `en` for `en-GB` → the first list entry. Put the preferred fallback name first. Search matches all `names[].value` entries and `aliases`, regardless of the current interface language. A name’s language tag does not mean the app interface supports that language.
+Display selects names in this order: an exact match for the interface language → the first name with the same base language, such as `en` for `en-GB` → the first list entry. Put the preferred fallback name first. Search matches all `names[].value` entries and `aliases`, regardless of the current interface language, ignoring case, whitespace and diacritics, so `sao sebastiao` finds São Sebastião without an unaccented alias. A name’s language tag does not mean the app interface supports that language.
 
 Each of the following is a valid station or line name field:
 
@@ -140,7 +140,7 @@ Optional `attribution` identifies who provided or maintains the data:
 { "kind": "official" }
 ```
 
-This displays “Maintainer: App Developer” and is used for Beijing, Shanghai and London, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
+This displays “Maintainer: App Developer” and is used for Beijing, Shanghai, London, Lisbon, Valencia and Málaga, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
 
 ```json
 { "kind": "community", "name": "Alice" }

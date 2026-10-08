@@ -44,13 +44,15 @@ describe('complete city networks', () => {
     ).toBe(false);
   });
   it.each(cities)('$zhName: every station is reachable within its operating network', (city) => {
-    // SkyShuttle and London's Cable Car have no internal rail interchange.
+    // SkyShuttle, London's Cable Car and Valencia's L10 have no internal rail interchange.
     const independent =
       city.id === 'shenzhen'
         ? city.lines.find((l) => localisedName(l, 'zh-CN') === '坪山云巴1号线')!.stationIds
         : city.id === 'london'
           ? city.lines.find((l) => l.kind === 'cable-car')!.stationIds
-          : [];
+          : city.id === 'valencia'
+            ? city.lines.find((l) => l.id === 'valencia-l10')!.stationIds
+            : [];
     const groups = [city.stations.map((s) => s.id).filter((id) => !independent.includes(id))];
     if (independent.length) groups.push(independent);
     for (const group of groups) {
