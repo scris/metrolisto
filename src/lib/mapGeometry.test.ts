@@ -5,7 +5,7 @@ import example from '../../docs/city.example.json';
 import { stationSpans } from './mapGeometry';
 
 describe('parallel station markers', () => {
-  it.each(['london', 'guangzhou', 'shanghai', 'valencia', 'malaga'])(
+  it.each(['london', 'guangzhou', 'shanghai', 'valencia', 'malaga', 'paris'])(
     '%s: encloses the drawing endpoints at shared stops and branches',
     (id) => {
       const city = cities.find((c) => c.id === id)!;
@@ -35,7 +35,7 @@ describe('parallel station markers', () => {
     },
   );
 
-  it.each(['london', 'amsterdam', 'lisbon', 'valencia', 'malaga'])(
+  it.each(['london', 'amsterdam', 'lisbon', 'valencia', 'malaga', 'paris'])(
     '%s: draws no line through a stop it does not serve',
     (id) => {
       const city = cities.find((c) => c.id === id)!;

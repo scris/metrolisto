@@ -163,10 +163,12 @@ export default function MetroMap({
       maxX = Math.max(...xs),
       minY = Math.min(...ys),
       maxY = Math.max(...ys);
+    // Reserve screen space for the floating toolbar and controls, even on very large networks.
+    const usableHeight = Math.max(size.height * 0.6, size.height - 140);
     setView({
       x: (minX + maxX) / 2,
       y: (minY + maxY) / 2,
-      width: Math.max(650, maxX - minX + 240, ((maxY - minY + 200) * size.width) / size.height),
+      width: Math.max(650, maxX - minX + 240, ((maxY - minY + 200) * size.width) / usableHeight),
     });
   };
 
@@ -443,6 +445,7 @@ export default function MetroMap({
               [b.x, b.y],
             ];
             const color = exploredOnly && !isLit && !isRoute ? COLOR.dim : line.color;
+            const strokeWidth = Math.max(isRoute ? 9 : isLit ? 8 : 5.5, scale * 1.1);
             // Place a direction arrow on the longest straight leg, clear of station markers.
             const arrow = edge.oneWay
               ? edge.curve === 'cubic'
@@ -467,14 +470,14 @@ export default function MetroMap({
                   <path
                     d={cubicPath(points)}
                     stroke={color}
-                    strokeWidth={isRoute ? 9 : isLit ? 8 : 5.5}
+                    strokeWidth={strokeWidth}
                     className={isRoute ? 'preview-line' : ''}
                   />
                 ) : (
                   <polyline
                     points={points.map((p) => p.join(',')).join(' ')}
                     stroke={color}
-                    strokeWidth={isRoute ? 9 : isLit ? 8 : 5.5}
+                    strokeWidth={strokeWidth}
                     className={isRoute ? 'preview-line' : ''}
                   />
                 )}

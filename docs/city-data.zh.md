@@ -140,7 +140,7 @@ pnpm format:check      # 检查城市数据及其余项目文件
 { "kind": "official" }
 ```
 
-表示“由应用开发者维护 / Maintainer: App Developer”，用于 MetroListo 第一方维护的北京、上海、伦敦、里斯本、瓦伦西亚和马拉加，**不是交通运营方对应用的认证**。
+表示“由应用开发者维护 / Maintainer: App Developer”，用于 MetroListo 第一方维护的北京、上海、伦敦及巴黎，**不是交通运营方对应用的认证**。
 
 ```json
 { "kind": "community", "name": "Alice" }

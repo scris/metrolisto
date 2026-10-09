@@ -37,18 +37,20 @@ describe('city distance ordering', () => {
     ).toBeCloseTo(Math.PI * 6371);
   });
 
-  it.each(['london', 'amsterdam'])('puts the neighboring European city next to %s', (id) => {
+  it.each([
+    ['london', 'paris', 340, 350],
+    ['paris', 'london', 340, 350],
+    ['amsterdam', 'london', 350, 370],
+  ])('puts the nearest north-western European city next to %s', (id, neighbor, min, max) => {
     const current = cities.find((city) => city.id === id)!;
-    const neighbor = cities.find(
-      (city) => ['london', 'amsterdam'].includes(city.id) && city.id !== id,
-    )!;
+    const other = cities.find((city) => city.id === neighbor)!;
     expect(
       sortCitiesByDistance(cities, current)
         .slice(0, 2)
         .map((city) => city.id),
-    ).toEqual([id, neighbor.id]);
-    expect(cityDistanceKm(current, neighbor)).toBeGreaterThan(350);
-    expect(cityDistanceKm(current, neighbor)).toBeLessThan(370);
+    ).toEqual([id, neighbor]);
+    expect(cityDistanceKm(current, other)).toBeGreaterThan(min);
+    expect(cityDistanceKm(current, other)).toBeLessThan(max);
   });
 
   it.each([

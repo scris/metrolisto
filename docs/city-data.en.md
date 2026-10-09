@@ -140,7 +140,7 @@ Optional `attribution` identifies who provided or maintains the data:
 { "kind": "official" }
 ```
 
-This displays “Maintainer: App Developer” and is used for Beijing, Shanghai, London, Lisbon, Valencia and Málaga, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
+This displays “Maintainer: App Developer” and is used for Beijing, Shanghai, London and Paris, which are maintained directly by MetroListo. **It does not indicate endorsement of the app by a transport operator.**
 
 ```json
 { "kind": "community", "name": "Alice" }

@@ -75,7 +75,7 @@ describe('Lisbon metro', () => {
     ).toHaveLength(3);
   });
 
-  it('changes once between Odivelas and the airport and keeps Rato–Cais do Sodré as a two-change trip', () => {
+  it('changes once between Odivelas and the airport and distinguishes fewest-change and balanced Rato–Cais do Sodré routes', () => {
     const airport = trip('Odivelas', 'Aeroporto');
     expect(names(airport.transferIds)).toEqual(['Saldanha']);
     expect(routeGroups(airport, city).map((g) => g.lineId)).toEqual([
