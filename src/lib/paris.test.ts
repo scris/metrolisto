@@ -18,6 +18,69 @@ const trip = (from: string, to: string, via: string[] = []) => {
 };
 
 describe('Paris Métro and RER', () => {
+  it('keeps repaired interchange approaches on horizontal, vertical or 45-degree tracks', () => {
+    const repaired = new Set(
+      [
+        'Châtelet – Les Halles',
+        'Bastille',
+        'Porte Maillot',
+        'Saint-Lazare',
+        'Opéra',
+        'République',
+        'Montparnasse – Bienvenüe',
+        'Saint-Michel – Notre-Dame',
+        "Gare de l'Est",
+        'Gare du Nord',
+        'Denfert-Rochereau',
+        'Rosny – Bois-Perrier',
+        'Vavin',
+        'Thiais – Orly',
+        "Aéroport d'Orly",
+      ].map(id),
+    );
+    for (const edge of city.segments.filter((e) => repaired.has(e.from) || repaired.has(e.to))) {
+      for (let i = 1; i < edge.points!.length; i++) {
+        const a = edge.points![i - 1],
+          b = edge.points![i];
+        const dx = b[0] - a[0],
+          dy = b[1] - a[1];
+        // Short samples form the rounded corners; check the straight runs between them.
+        if (Math.hypot(dx, dy) <= 25) continue;
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+        expect(Math.abs(angle - Math.round(angle / 45) * 45), edge.id).toBeLessThan(1);
+      }
+    }
+  });
+
+  it('spaces the four Montparnasse tracks evenly across the marker', () => {
+    const ports = ['12', '13', '4', '6'].map(
+      (line) =>
+        city.segments.find(
+          (e) => e.lineId === `paris-${line}` && e.from === id('Montparnasse – Bienvenüe'),
+        )!.points![0][1],
+    );
+    for (let i = 2; i < ports.length; i++)
+      expect(ports[i] - ports[i - 1]).toBeCloseTo(ports[1] - ports[0], 1);
+  });
+
+  it('keeps Line 6 straight on both sides of Denfert and Line 11 straight through République', () => {
+    for (const edgeId of [
+      'paris-6--raspail--denfert-rochereau',
+      'paris-6--denfert-rochereau--saint-jacques',
+      'paris-11--goncourt--republique',
+      'paris-11--republique--arts-et-metiers',
+    ]) {
+      const points = city.segments.find((e) => e.id === edgeId)!.points!;
+      expect(points, edgeId).toHaveLength(2);
+    }
+    const approach = city.segments.find(
+      (e) => e.id === 'paris-c--gare-d-austerlitz--saint-michel-notre-dame',
+    )!.points!;
+    const [a, b] = approach.slice(-2);
+    expect(a[1]).toBe(b[1]);
+    expect(Math.abs(b[0] - a[0])).toBeGreaterThan(250);
+  });
+
   it('includes 16 Métro lines and RER A–E with French-only station names', () => {
     expect(city.lines.map((l) => l.shortNames[0].value)).toEqual([
       '1',

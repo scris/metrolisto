@@ -10,3 +10,4 @@ test-results
 !.env.example
 *.log
 .claude/
+.idea/

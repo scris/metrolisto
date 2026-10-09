@@ -2,9 +2,52 @@ import { describe, expect, it } from 'vitest';
 import { cities } from '../data';
 import type { CityData, Point } from '../types';
 import example from '../../docs/city.example.json';
-import { stationSpans } from './mapGeometry';
+import { stationMarkerDistance, stationSpans } from './mapGeometry';
 
 describe('parallel station markers', () => {
+  it('keeps every Paris interchange on a straight marker without branches', () => {
+    const city = cities.find((c) => c.id === 'paris')!;
+    for (const span of stationSpans(city).values()) expect(span.padding).toBeLessThan(0.5);
+    expect(stationSpans(city).get('paris-rosny-bois-perrier')!.length).toBeCloseTo(28);
+    expect(stationSpans(city).get('paris-gare-de-lyon')!.length).toBeGreaterThan(90);
+  });
+
+  it('hit-tests both ends, sides and rounded caps of a long interchange', () => {
+    const city = cities.find((c) => c.id === 'paris')!;
+    const station = city.stations.find((s) => s.id === 'paris-gare-de-lyon')!;
+    const span = stationSpans(city).get(station.id)!;
+    const dx = (span.to[0] - span.from[0]) / span.length,
+      dy = (span.to[1] - span.from[1]) / span.length;
+    for (const point of [
+      span.from,
+      span.to,
+      [span.from[0] - dx * 10, span.from[1] - dy * 10],
+      [span.to[0] + dx * 10, span.to[1] + dy * 10],
+      [span.center[0] - dy * 10, span.center[1] + dx * 10],
+    ] as Point[])
+      expect(stationMarkerDistance(station, span, point)).toBeLessThan(15.8);
+    expect(
+      stationMarkerDistance(station, span, [span.to[0] + dx * 20, span.to[1] + dy * 20]),
+    ).toBeGreaterThan(15.8);
+  });
+
+  it('hit-tests an offset single-line marker at its drawing position', () => {
+    const city = structuredClone(example) as CityData;
+    const station = city.stations[0];
+    city.segments = [
+      {
+        ...city.segments[0],
+        points: [
+          [station.x + 60, station.y],
+          [1000, 900],
+        ],
+      },
+    ];
+    const span = stationSpans(city).get(station.id)!;
+    expect(stationMarkerDistance(station, span, span.center)).toBe(0);
+    expect(stationMarkerDistance(station, span, [station.x, station.y])).toBe(60);
+  });
+
   it.each(['london', 'guangzhou', 'shanghai', 'valencia', 'malaga', 'paris'])(
     '%s: encloses the drawing endpoints at shared stops and branches',
     (id) => {

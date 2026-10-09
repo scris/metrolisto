@@ -1,4 +1,4 @@
-import type { CityData, Point } from '../types';
+import type { CityData, Point, Station } from '../types';
 
 export interface StationSpan {
   points: Point[];
@@ -8,6 +8,27 @@ export interface StationSpan {
   angle: number;
   center: Point;
   padding: number;
+}
+
+/** Distance to the marker spine, including its allowance for offset endpoints. */
+export function stationMarkerDistance(
+  station: Station,
+  span: StationSpan | undefined,
+  point: Point,
+) {
+  const from = span?.from ?? ([station.x, station.y] as Point);
+  const to = span?.to ?? from;
+  const dx = to[0] - from[0],
+    dy = to[1] - from[1];
+  const along = Math.max(
+    0,
+    Math.min(1, ((point[0] - from[0]) * dx + (point[1] - from[1]) * dy) / (dx * dx + dy * dy || 1)),
+  );
+  return Math.max(
+    0,
+    Math.hypot(point[0] - from[0] - along * dx, point[1] - from[1] - along * dy) -
+      (span?.padding ?? 0),
+  );
 }
 
 /** Span offset drawing endpoints while keeping a single logical station. */

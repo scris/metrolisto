@@ -1323,7 +1323,7 @@ export default function App() {
               </a>
             ))}
           </div>
-          <p className="sheet-note">{t('MetroListo 全地铁 · 灵感来自线格 · Built with TDesign')}</p>
+          <p className="sheet-note">{t('MetroListo 全地铁 · 灵感来自线格')}</p>
         </div>
       </Popup>
       <Popup

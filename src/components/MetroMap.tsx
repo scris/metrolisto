@@ -2,7 +2,13 @@ import { useLocale } from './LocaleProvider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Focus, LocateFixed, Maximize2, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { isInterchange, type Network } from '../lib/network';
-import { cubicArrow, cubicPath, stationSpans, type StationSpan } from '../lib/mapGeometry';
+import {
+  cubicArrow,
+  cubicPath,
+  stationMarkerDistance,
+  stationSpans,
+  type StationSpan,
+} from '../lib/mapGeometry';
 import { labelLineOverlap } from '../lib/mapLabels';
 import type { Progress, Route, Station } from '../types';
 import { mapRivers } from '../data/rivers';
@@ -53,22 +59,9 @@ function StationMarker({
         {...paint}
       />
     );
-  const dx = span.to[0] - span.from[0],
-    dy = span.to[1] - span.from[1];
-  const branches = span.points.flatMap((point) => {
-    const along = Math.max(
-      0,
-      Math.min(
-        1,
-        ((point[0] - span.from[0]) * dx + (point[1] - span.from[1]) * dy) / span.length ** 2,
-      ),
-    );
-    const nearest = [span.from[0] + along * dx, span.from[1] + along * dy];
-    return Math.hypot(point[0] - nearest[0], point[1] - nearest[1]) > 0.1
-      ? [`M ${nearest.join(' ')} L ${point.join(' ')}`]
-      : [];
-  });
-  const path = [`M ${span.from.join(' ')} L ${span.to.join(' ')}`, ...branches].join(' ');
+  // A station is always a circle or one straight capsule, never a branched glyph.
+  const path = `M ${span.from.join(' ')} L ${span.to.join(' ')}`;
+  const radius = r + span.padding;
   return (
     <g opacity={paint.opacity}>
       {paint.stroke && (
@@ -76,7 +69,7 @@ function StationMarker({
           d={path}
           fill="none"
           stroke={paint.stroke}
-          strokeWidth={r * 2 + (paint.strokeWidth ?? 0)}
+          strokeWidth={radius * 2 + (paint.strokeWidth ?? 0)}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -85,7 +78,7 @@ function StationMarker({
         d={path}
         fill="none"
         stroke={paint.fill}
-        strokeWidth={r * 2}
+        strokeWidth={radius * 2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -387,11 +380,16 @@ export default function MetroMap({
             const rect = e.currentTarget.getBoundingClientRect();
             const x = view.x + (e.clientX - rect.left - rect.width / 2) * scale;
             const y = view.y + (e.clientY - rect.top - rect.height / 2) * scale;
-            const station = [...city.stations]
+            const hits = city.stations
               .filter(canSelect)
-              .sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0];
-            if (station && Math.hypot(station.x - x, station.y - y) < Math.max(13, scale * 12))
-              selectStation(station);
+              .map((station) => ({
+                station,
+                distance: stationMarkerDistance(station, spans.get(station.id), [x, y]),
+                radius: Math.max((interchanges.has(station.id) ? 8.8 : 5.7) + 7, scale * 9),
+              }))
+              .filter(({ distance, radius }) => distance <= radius)
+              .sort((a, b) => a.distance - b.distance);
+            if (hits[0]) selectStation(hits[0].station);
           }
           pointers.current.delete(e.pointerId);
         }}
