@@ -1,0 +1,9 @@
+{
+  "modelVersion": "6.0.0",
+  "description": "MetroListo for HarmonyOS",
+  "dependencies": {
+    "@wisdomgarden/cloak": "^1.0.8"
+  },
+  "devDependencies": {},
+  "dynamicDependencies": {}
+}

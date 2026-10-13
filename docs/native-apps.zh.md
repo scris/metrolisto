@@ -1,8 +1,8 @@
-# iOS / Android 原生应用开发
+# iOS / Android / HarmonyOS 原生应用开发
 
 [English](native-apps.en.md) | 简体中文
 
-MetroListo 使用 Capacitor 8.5.2 将现有 React 应用打包到 iOS 和 Android。两端共用网页源码、城市数据和路由逻辑。
+MetroListo 使用 Capacitor 8.5.2 将现有 React 应用打包到 iOS 和 Android，使用 [Cloak](https://github.com/WisdomGardenInc/Cloak) 1.0.8 打包到 HarmonyOS。各端共用网页源码、城市数据和路由逻辑。以下各节说明 iOS 和 Android，HarmonyOS 见[文末](#harmonyos)。
 
 ## 工程配置
 
@@ -81,3 +81,63 @@ pnpm build && pnpm sync:capacitor
 ```
 
 `pnpm build && pnpm sync:capacitor` 验证 TypeScript / Web 构建、资源复制及平台配置同步，不执行 Swift / Java 编译、设备安装或模拟器运行。
+
+## HarmonyOS
+
+HarmonyOS 工程位于 `harmony/`，由 Cloak 在 ArkWeb 中加载同一份 Web 产物，支持手机、平板和电脑。
+
+| 项目          | 配置                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------- |
+| 应用名称      | 全地铁（中文）/ MetroListo（其他语言）                                                  |
+| bundleName    | `com.tianzeds.ml`                                                                       |
+| 版本号        | `harmony/AppScope/app.json5`                                                            |
+| 设备类型      | `phone`、`tablet`、`2in1`，见 `harmony/entry/src/main/module.json5`                     |
+| 框架          | `@wisdomgarden/cloak` 1.0.8，由 ohpm 安装                                               |
+| Cloak 配置    | `harmony/entry/src/main/resources/rawfile/config.json`                                  |
+| Web 产物      | `harmony/entry/src/main/resources/rawfile/www/`，由 `pnpm sync:harmony` 从 `dist/` 复制 |
+| 最低系统版本  | HarmonyOS 5.0.3（API 15）                                                               |
+| 目标 SDK 版本 | HarmonyOS 6.0.0（API 20）                                                               |
+
+### 环境与开发流程
+
+需要包含 API 20 SDK 的 DevEco Studio 6.0.0 或更新版本；ohpm 和 hvigor 随 DevEco Studio 提供。
+
+```sh
+pnpm install
+pnpm build:harmony
+```
+
+`pnpm build:harmony` 构建网页并复制到 `rawfile/www/`，不启动 IDE。随后用 DevEco Studio 打开 `harmony/`，等待 ohpm 同步完成后运行到真机或模拟器。已有最新 Web 产物时可只执行 `pnpm sync:harmony`。
+
+`rawfile/www/`、`oh_modules/` 和构建目录已被忽略，新检出必须先执行一次同步；否则应用显示 Cloak 自带的默认页面。`harmony/oh-package-lock.json5` 受版本控制。
+
+### 构建与签名
+
+`harmony/build-profile.json5` 的 `signingConfigs` 为空。调试时在 DevEco Studio 的 File → Project Structure → Signing Configs 中启用自动签名，或填入自己的证书和 Profile。DevEco Studio 会把本机路径和加密口令写回该文件，这部分改动不要提交。发布需使用在 AppGallery Connect 申请的发布证书和 Profile。
+
+也可以用 DevEco Studio 自带的命令行工具构建。未配置签名时产物为未签名 HAP，只用于验证编译：
+
+```sh
+export DEVECO=/Applications/DevEco-Studio.app/Contents
+export DEVECO_SDK_HOME=$DEVECO/sdk JAVA_HOME=$DEVECO/jbr/Contents/Home
+export PATH=$DEVECO/tools/ohpm/bin:$DEVECO/tools/hvigor/bin:$DEVECO/tools/node/bin:$PATH
+cd harmony
+ohpm install
+hvigorw assembleHap --mode module -p product=default -p buildMode=debug --no-daemon
+```
+
+### 与其他平台的差异
+
+- **窗口**：不使用沉浸式布局，状态栏和窗口底色与页面背景一致（`#F3F5F9`）；应用固定为浅色。手机和平板跟随系统的旋转设置。电脑上使用系统窗口标题栏，窗口最小为 360 × 480 vp，布局由网页的响应式断点决定。
+- **返回**：WebView 有历史记录时后退；没有时交给系统，应用退到后台并保留当前地图状态。
+- **备份导出**：ArkWeb 不处理网页的 blob 下载。`FileExportPlugin` 打开系统的文件保存面板（DocumentViewPicker），把 UTF-8 JSON 写入用户选择的位置，不需要申请权限。取消和写入失败不会提示导出成功。导入仍使用网页的文件选择器。
+- **外部链接**：`AppControlPlugin` 交给系统浏览器打开，不在应用的 WebView 中加载。
+- **权限**：只声明 `ohos.permission.INTERNET`，与 Android 一致；该权限由系统授予，没有弹窗。
+- **数据**：足迹保存在 WebView 的 `http://localhost` 源下。修改 `config.json` 的 `APP_HOST` 会让已安装的应用读不到原有足迹。`EntryBackupAbility` 允许系统备份和恢复应用数据。
+- **图标**：分层图标由 `assets/icon/app-icon.svg` 拆分而来，`background.png` 是场景，`foreground.png` 是扇形光束，叠加后与 iOS 图标一致；`startIcon.png` 用于启动页。
+
+两个插件在 `harmony/entry/src/main/ets/plugins/`，网页一侧的调用在 `src/lib/harmony.ts`。Cloak 官方插件见 [CloakPlugins](https://github.com/WisdomGardenInc/CloakPlugins)；其中 Filesystem 只能读写应用沙箱，无法把备份保存到用户选择的位置。
+
+### 验证范围
+
+`pnpm build:harmony` 验证 Web 构建和资源复制，上面的 hvigor 命令验证 ArkTS 编译和 HAP 打包。签名、安装、文件保存面板、从备份恢复和系统浏览器跳转需要在发布前分别在手机、平板和电脑上验证。

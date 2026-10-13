@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "全地铁"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "从一站到一城，点亮每一段地铁旅程。"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "全地铁"
+    }
+  ]
+}

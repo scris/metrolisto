@@ -59,6 +59,20 @@ describe('backup export', () => {
     vi.mocked(Share.share).mockRejectedValue(new Error('Share canceled'));
     await expect(downloadBackup('{}')).rejects.toThrow('Share canceled');
   });
+  it('saves through the HarmonyOS save panel and reports cancellation and failures', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+    const saveUserTextFile = vi.fn().mockResolvedValue({ success: true });
+    vi.stubGlobal('Cloak', { plugins: { FileExport: { saveUserTextFile } } });
+    expect(await downloadBackup('{"城市":"北京"}', 'backup.json')).toBe('saved');
+    expect(saveUserTextFile).toHaveBeenCalledWith('backup.json', '{"城市":"北京"}');
+    saveUserTextFile.mockResolvedValue({ success: false, cancelled: true });
+    await expect(downloadBackup('{}')).rejects.toThrow('已取消保存');
+    saveUserTextFile.mockResolvedValue({ success: false, error: 'WRITE_ZERO_BYTES' });
+    await expect(downloadBackup('{}')).rejects.toThrow('WRITE_ZERO_BYTES');
+    vi.stubGlobal('Cloak', {});
+    await expect(downloadBackup('{}')).rejects.toThrow('系统保存面板不可用');
+    expect(Filesystem.writeFile).not.toHaveBeenCalled();
+  });
   it('downloads original recovery contents unchanged on the web and releases the URL', async () => {
     vi.useFakeTimers();
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);

@@ -2,7 +2,7 @@
 
 [English](README.md) | 简体中文
 
-用日常通勤，收集一座城市。基于 **pnpm + React 18 + TypeScript + Vite + TDesign Mobile React** 的响应式网页应用，通过 **Capacitor** 支持 iOS 和 Android，产品灵感来自 [线格](https://apps.apple.com/cn/app/id6770010912)。
+用日常通勤，收集一座城市。基于 **pnpm + React 18 + TypeScript + Vite + TDesign Mobile React** 的响应式网页应用，通过 **Capacitor** 支持 iOS 和 Android，通过 **Cloak** 支持 HarmonyOS，产品灵感来自 [线格](https://apps.apple.com/cn/app/id6770010912)。
 
 ## 本地运行
 
@@ -38,6 +38,17 @@ pnpm build:android      # 构建网页并同步两端，随后用 Android Studio
 ```
 
 iOS 使用 Swift Package Manager。环境要求、单平台同步、原生构建和签名说明见 [原生应用开发](docs/native-apps.zh.md)。
+
+## HarmonyOS
+
+`harmony/` 是基于 [Cloak](https://github.com/WisdomGardenInc/Cloak) 的 HarmonyOS 工程，支持手机、平板和电脑。
+
+```sh
+pnpm build:harmony      # 构建网页并复制到 harmony 工程，随后用 DevEco Studio 打开 harmony/
+pnpm sync:harmony       # 仅复制已构建的网页
+```
+
+签名、命令行构建和平台差异见 [原生应用开发](docs/native-apps.zh.md#harmonyos)。
 
 ## 已实现
 
@@ -100,5 +111,6 @@ scripts/format-city-data.mjs  城市数据专用格式器与检查
 capacitor.config.ts           原生应用标识、Web 资源目录和平台配置
 ios/                         Xcode 工程与 Swift Package Manager 配置
 android/                     Android Studio 工程与 Gradle Wrapper
+harmony/                     DevEco Studio 工程、Cloak 配置与原生插件
 docs/                        数据协议、最小城市示例与来源
 ```

@@ -2,7 +2,7 @@
 
 English | [简体中文](README.zh.md)
 
-Collect a city through your everyday journeys. A responsive web app built with **pnpm + React 18 + TypeScript + Vite + TDesign Mobile React**, with iOS and Android support through **Capacitor**, inspired by [线格](https://apps.apple.com/cn/app/id6770010912).
+Collect a city through your everyday journeys. A responsive web app built with **pnpm + React 18 + TypeScript + Vite + TDesign Mobile React**, with iOS and Android support through **Capacitor** and HarmonyOS support through **Cloak**, inspired by [线格](https://apps.apple.com/cn/app/id6770010912).
 
 ## Local development
 
@@ -38,6 +38,17 @@ pnpm build:android      # Build and sync both platforms, then open android/ in A
 ```
 
 iOS uses Swift Package Manager. See [Native app development](docs/native-apps.en.md) for environment requirements, syncing a single platform, native builds and signing.
+
+## HarmonyOS
+
+`harmony/` is a HarmonyOS project built on [Cloak](https://github.com/WisdomGardenInc/Cloak), for phones, tablets and PCs.
+
+```sh
+pnpm build:harmony      # Build the web app and copy it into the harmony project, then open harmony/ in DevEco Studio
+pnpm sync:harmony       # Copy an existing web build only
+```
+
+See [Native app development](docs/native-apps.en.md#harmonyos) for signing, command-line builds and platform differences.
 
 ## Features
 
@@ -99,5 +110,6 @@ scripts/format-city-data.mjs  City data formatter and checks
 capacitor.config.ts           Native app identifiers, web asset directory and platform settings
 ios/                         Xcode project and Swift Package Manager configuration
 android/                     Android Studio project and Gradle Wrapper
+harmony/                     DevEco Studio project, Cloak configuration and native plugins
 docs/                        Data schema, minimal city example and sources
 ```

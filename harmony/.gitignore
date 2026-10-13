@@ -1,0 +1,16 @@
+# Predefined
+/node_modules
+/oh_modules
+/local.properties
+/.idea
+**/build
+/.hvigor
+.cxx
+/.clangd
+/.clang-format
+/.clang-tidy
+**/.test
+/.appanalyzer
+
+# Web bundle copied in by `pnpm sync:harmony`
+/entry/src/main/resources/rawfile/www/

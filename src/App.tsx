@@ -347,8 +347,11 @@ export default function App() {
         locale,
       );
       setToast({
-        text:
-          outcome === 'native' ? t('分享面板已关闭，请确认已保存备份') : t('已请求浏览器下载备份'),
+        text: {
+          native: t('分享面板已关闭，请确认已保存备份'),
+          saved: t('备份已保存'),
+          web: t('已请求浏览器下载备份'),
+        }[outcome],
       });
     } catch (error) {
       setToast({

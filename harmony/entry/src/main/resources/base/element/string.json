@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "MetroListo"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Explore a city, one station at a time."
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "MetroListo"
+    }
+  ]
+}

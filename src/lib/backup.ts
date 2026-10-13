@@ -2,13 +2,14 @@ import { translate, type Locale } from './i18n';
 import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { isHarmony, saveTextFile } from './harmony';
 
 /** Native exports use a real file; the caller reports cancellation and failures. */
 export async function downloadBackup(
   contents: string,
   filename = `MetroListo-backup-${new Date().toISOString().slice(0, 10)}.json`,
   locale: Locale = 'zh-CN',
-): Promise<'native' | 'web'> {
+): Promise<'native' | 'saved' | 'web'> {
   if (Capacitor.isNativePlatform()) {
     const { uri } = await Filesystem.writeFile({
       path: filename,
@@ -23,6 +24,11 @@ export async function downloadBackup(
     });
     // Android recipients may read after the share promise resolves. Let the OS clear its cache.
     return 'native';
+  }
+  if (isHarmony()) {
+    // The system save panel reports the outcome itself, unlike a share sheet or a download.
+    await saveTextFile(filename, contents);
+    return 'saved';
   }
   const blob = new Blob([contents], { type: 'application/json' });
   const url = URL.createObjectURL(blob);

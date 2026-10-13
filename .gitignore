@@ -11,3 +11,4 @@ test-results
 *.log
 .claude/
 .idea/
+/android/app/release

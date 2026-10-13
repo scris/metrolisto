@@ -1,8 +1,8 @@
-# iOS / Android native app development
+# iOS / Android / HarmonyOS native app development
 
 English | [简体中文](native-apps.zh.md)
 
-MetroListo uses Capacitor 8.5.2 to package the existing React app for iOS and Android. Both platforms share the web source code, city data and routing logic.
+MetroListo uses Capacitor 8.5.2 to package the existing React app for iOS and Android, and [Cloak](https://github.com/WisdomGardenInc/Cloak) 1.0.8 to package it for HarmonyOS. All platforms share the web source code, city data and routing logic. The sections below cover iOS and Android; HarmonyOS is described [at the end](#harmonyos).
 
 ## Project configuration
 
@@ -81,3 +81,63 @@ pnpm build && pnpm sync:capacitor
 ```
 
 `pnpm build && pnpm sync:capacitor` validates the TypeScript / web build, asset copying and platform configuration sync. It does not compile Swift / Java, install on a device or run a simulator.
+
+## HarmonyOS
+
+The HarmonyOS project is in `harmony/`. Cloak loads the same web build in ArkWeb, on phones, tablets and PCs.
+
+| Item                   | Configuration                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| App name               | 全地铁 (Chinese) / MetroListo (other languages)                                             |
+| bundleName             | `com.tianzeds.ml`                                                                           |
+| Version numbers        | `harmony/AppScope/app.json5`                                                                |
+| Device types           | `phone`, `tablet` and `2in1`; see `harmony/entry/src/main/module.json5`                     |
+| Framework              | `@wisdomgarden/cloak` 1.0.8, installed by ohpm                                              |
+| Cloak configuration    | `harmony/entry/src/main/resources/rawfile/config.json`                                      |
+| Web build output       | `harmony/entry/src/main/resources/rawfile/www/`, copied from `dist/` by `pnpm sync:harmony` |
+| Minimum system version | HarmonyOS 5.0.3 (API 15)                                                                    |
+| Target SDK version     | HarmonyOS 6.0.0 (API 20)                                                                    |
+
+### Environment and workflow
+
+DevEco Studio 6.0.0 or later with the API 20 SDK is required. ohpm and hvigor come with DevEco Studio.
+
+```sh
+pnpm install
+pnpm build:harmony
+```
+
+`pnpm build:harmony` builds the web app and copies it to `rawfile/www/`; it does not launch an IDE. Afterwards, open `harmony/` in DevEco Studio, wait for the ohpm sync to finish, then run on a device or emulator. If the web build is already up to date, `pnpm sync:harmony` is enough.
+
+`rawfile/www/`, `oh_modules/` and build directories are ignored, so a fresh checkout must run the sync step first; otherwise the app shows Cloak’s built-in default page. `harmony/oh-package-lock.json5` is version-controlled.
+
+### Building and signing
+
+`signingConfigs` in `harmony/build-profile.json5` is empty. For debugging, enable automatic signing under File → Project Structure → Signing Configs in DevEco Studio, or enter your own certificate and profile. DevEco Studio writes local paths and encrypted passwords back to that file; do not commit those changes. A release needs the release certificate and profile issued in AppGallery Connect.
+
+You can also build with the command-line tools bundled with DevEco Studio. Without a signing configuration the output is an unsigned HAP, which only validates compilation:
+
+```sh
+export DEVECO=/Applications/DevEco-Studio.app/Contents
+export DEVECO_SDK_HOME=$DEVECO/sdk JAVA_HOME=$DEVECO/jbr/Contents/Home
+export PATH=$DEVECO/tools/ohpm/bin:$DEVECO/tools/hvigor/bin:$DEVECO/tools/node/bin:$PATH
+cd harmony
+ohpm install
+hvigorw assembleHap --mode module -p product=default -p buildMode=debug --no-daemon
+```
+
+### Differences from the other platforms
+
+- **Window**: the layout is not immersive. The status bar and window background match the page background (`#F3F5F9`), and the app is always light. Phones and tablets follow the system rotation setting. On PCs the app uses the system window title bar with a minimum window size of 360 × 480 vp, and the web app’s responsive breakpoints decide the layout.
+- **Back**: the WebView goes back when it has history. Otherwise the system handles it, moving the app to the background and keeping the current map state.
+- **Backup export**: ArkWeb does not handle blob downloads from the page. `FileExportPlugin` opens the system save panel (DocumentViewPicker) and writes UTF-8 JSON to the location the user chooses, without requesting any permission. Cancellation and write failures do not report a successful export. Import continues to use the web file picker.
+- **External links**: `AppControlPlugin` hands them to the system browser instead of loading them in the app’s WebView.
+- **Permissions**: only `ohos.permission.INTERNET` is declared, as on Android. The system grants it without a prompt.
+- **Data**: journey history is stored under the WebView’s `http://localhost` origin. Changing `APP_HOST` in `config.json` would leave installed apps unable to read their existing records. `EntryBackupAbility` lets the system back up and restore app data.
+- **Icons**: the layered icon is split from `assets/icon/app-icon.svg`. `background.png` is the scene and `foreground.png` is the beams; composited, they match the iOS icon. `startIcon.png` is used on the launch window.
+
+The two plugins are in `harmony/entry/src/main/ets/plugins/`, and the web side calls them from `src/lib/harmony.ts`. Official Cloak plugins are listed in [CloakPlugins](https://github.com/WisdomGardenInc/CloakPlugins); its Filesystem plugin only reads and writes the app sandbox, so it cannot save a backup to a location the user chooses.
+
+### Validation scope
+
+`pnpm build:harmony` validates the web build and asset copying, and the hvigor command above validates ArkTS compilation and HAP packaging. Signing, installation, the save panel, restoring from a backup and opening the system browser must be tested on a phone, a tablet and a PC before release.

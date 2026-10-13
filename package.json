@@ -12,6 +12,7 @@
     "build": "pnpm format:city:check && tsc -b && vite build",
     "build:android": "pnpm build && pnpm sync:capacitor",
     "build:ios": "pnpm build && pnpm sync:capacitor",
+    "build:harmony": "pnpm build && pnpm sync:harmony",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "format": "pnpm format:city && prettier --write src scripts docs .github *.json *.ts *.yaml *.md index.html",
@@ -19,7 +20,8 @@
     "format:city": "node scripts/format-city-data.mjs --write",
     "format:city:check": "node scripts/format-city-data.mjs --check",
     "copy:capacitor": "npx cap copy",
-    "sync:capacitor": "npx cap sync"
+    "sync:capacitor": "npx cap sync",
+    "sync:harmony": "node scripts/sync-harmony.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",
