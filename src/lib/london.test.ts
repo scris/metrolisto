@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cities } from '../data';
 import type { CityData } from '../types';
 import { localisedName } from './i18n';
+import { mergedStops, stationSpans } from './mapGeometry';
 import {
   createNetwork,
   findRoute,
@@ -81,6 +82,25 @@ describe('London coverage and interchanges', () => {
       expect(new Set(edges.map((e) => JSON.stringify(e.points))).size).toBe(edges.length);
     },
   );
+  const ports = (name: string, lines: string[]) =>
+    lines.map((line) => {
+      const station = id(name);
+      const points = city.segments
+        .filter(
+          (edge) => edge.lineId === `london-${line}` && [edge.from, edge.to].includes(station),
+        )
+        .map((edge) => {
+          const anchor = network.stationById.get(station)!;
+          const path = edge.points ?? [
+            [anchor.x, anchor.y],
+            [anchor.x, anchor.y],
+          ];
+          return edge.from === station ? path[0] : path.at(-1)!;
+        });
+      expect(points).toHaveLength(2);
+      expect(points[0]).toEqual(points[1]);
+      return JSON.stringify(points[0]);
+    });
   it.each([
     ['Kenton', ['bakerloo', 'lioness']],
     ['Royal Oak', ['circle', 'hammersmith-city']],
@@ -89,20 +109,16 @@ describe('London coverage and interchanges', () => {
     ['Sloane Square', ['circle', 'district']],
     ['East Ham', ['district', 'hammersmith-city']],
     ['Ruislip', ['metropolitan', 'piccadilly']],
-    ['Kew Gardens', ['district', 'mildmay']],
-  ])('keeps %s parallel paths continuous through the stop', (name, lines) => {
-    const station = id(name);
-    const ports = lines.map((line) => {
-      const points = city.segments
-        .filter(
-          (edge) => edge.lineId === `london-${line}` && [edge.from, edge.to].includes(station),
-        )
-        .map((edge) => (edge.from === station ? edge.points![0] : edge.points!.at(-1)!));
-      expect(points).toHaveLength(2);
-      expect(points[0]).toEqual(points[1]);
-      return JSON.stringify(points[0]);
-    });
-    expect(new Set(ports).size).toBe(lines.length);
+    ['Westbourne Park', ['circle', 'hammersmith-city']],
+  ])('merges the long shared corridor at %s into one ordinary stop', (name, lines) => {
+    const station = network.stationById.get(id(name))!;
+    expect(new Set(ports(name, lines))).toEqual(new Set([JSON.stringify([station.x, station.y])]));
+    expect(stationSpans(city).has(station.id)).toBe(false);
+    expect(mergedStops(city).has(station.id)).toBe(true);
+  });
+  it('keeps Kew Gardens on the short District/Mildmay section as a parallel capsule', () => {
+    expect(new Set(ports('Kew Gardens', ['district', 'mildmay'])).size).toBe(2);
+    expect(stationSpans(city).get(id('Kew Gardens'))?.length).toBeCloseTo(14, 0);
   });
   it('keeps Piccadilly parallel past intermediate District-only stops without adding calls', () => {
     const piccadilly = city.lines.find((line) => line.id === 'london-piccadilly')!;

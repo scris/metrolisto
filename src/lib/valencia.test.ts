@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cities } from '../data';
 import { localisedName } from './i18n';
-import { stationSpans } from './mapGeometry';
+import { mergedStops, stationSpans } from './mapGeometry';
 import {
   createNetwork,
   findRoute,
@@ -111,31 +111,76 @@ describe('Metrovalencia', () => {
     expect(new Set(edges.map((e) => JSON.stringify(e.points))).size).toBe(lines.length);
   });
 
-  it('spans the four parallel lines at Alameda and keeps single-line stops on their own track', () => {
+  it('keeps flat capsules only where separate tracks meet and merges every other stop', () => {
     const spans = stationSpans(city);
-    expect(spans.get(id('Alameda'))?.length).toBeGreaterThan(40);
-    expect(spans.get(id('Àngel Guimerà'))?.length).toBeGreaterThan(27);
-    expect(spans.get(id('Jesús'))?.length).toBeGreaterThan(27);
-    expect(spans.get(id('Bailén'))).toBeUndefined();
-    expect(spans.get(id('Alacant'))).toBeUndefined();
-    for (const name of ['Beniferri', 'Mislata', 'Ayora', 'Trinitat']) {
-      const station = id(name);
-      const ports = network.stationLines.get(station)!.map((line) => {
-        const endpoints = city.segments
-          .filter((edge) => edge.lineId === line.id && [edge.from, edge.to].includes(station))
-          .map((edge) => {
-            const points = edge.points ?? [
-              [0, 0],
-              [0, 0],
-            ];
-            return edge.from === station ? points[0] : points.at(-1)!;
-          });
-        expect(
-          endpoints.every((point) => JSON.stringify(point) === JSON.stringify(endpoints[0])),
-        ).toBe(true);
-        return JSON.stringify(endpoints[0]);
+    expect([...spans.keys()].map((s) => network.stationById.get(s)!.names[0].value)).toEqual([
+      'Empalme',
+      'Àngel Guimerà',
+      'Benimaclet',
+      'Marítim',
+    ]);
+    for (const [station, length, angle] of [
+      ['Empalme', 7, 135],
+      ['Àngel Guimerà', 14, 90],
+      ['Benimaclet', 7, 0],
+      ['Marítim', 7, 90],
+    ] as const) {
+      const span = spans.get(id(station))!;
+      expect(span.length, station).toBeCloseTo(length, 0);
+      expect(span.padding, station).toBeLessThan(0.1);
+      expect(Math.abs(span.angle) % 180, station).toBeCloseTo(angle, 5);
+    }
+    const merged = mergedStops(city);
+    for (const name of ['Beniferri', 'Mislata', 'Xàtiva', 'Alameda', 'Jesús', 'Trinitat'])
+      expect(merged.has(id(name)), name).toBe(true);
+    for (const name of ['Grau-La Marina', 'Francesc Cubells', 'Torrent Avinguda', 'Aeroport'])
+      expect(merged.has(id(name)), name).toBe(true);
+    for (const name of ['Empalme', 'Àngel Guimerà', 'Benimaclet', 'Marítim', 'À Punt', 'Bailén'])
+      expect(merged.has(id(name)), name).toBe(false);
+    // Every other line meets the station anchor, then runs on its own track in between.
+    for (const station of city.stations) {
+      if (spans.has(station.id)) continue;
+      // Every other line meets the station anchor, then runs on its own track in between.
+      for (const edge of city.segments) {
+        if (!edge.points) continue;
+        if (edge.from === station.id) expect(edge.points[0]).toEqual([station.x, station.y]);
+        if (edge.to === station.id) expect(edge.points.at(-1)).toEqual([station.x, station.y]);
+      }
+    }
+    for (const [a, b] of [
+      ['Beniferri', 'Campanar'],
+      ['Patraix', 'Safranar'],
+      ['Alameda', 'Colón'],
+      ['Mislata', "Nou d'Octubre"],
+      ['Amistat', 'Ayora'],
+      ['Universitat Politècnica', 'La Carrasca'],
+    ]) {
+      const edges = city.segments.filter(
+        (e) => [id(a), id(b)].includes(e.from) && [id(a), id(b)].includes(e.to),
+      );
+      const tracks = edges.map((e) =>
+        (e.points ?? [])
+          .slice(1, -1)
+          .map((p) => p.join(','))
+          .join(' '),
+      );
+      expect(new Set(tracks).size).toBe(edges.length);
+    }
+    // Every leg of every segment is horizontal, vertical or diagonal at 45°.
+    for (const edge of city.segments) {
+      const from = network.stationById.get(edge.from)!,
+        to = network.stationById.get(edge.to)!;
+      const points = edge.points ?? [
+        [from.x, from.y],
+        [to.x, to.y],
+      ];
+      points.slice(1).forEach((p, i) => {
+        const dx = p[0] - points[i][0],
+          dy = p[1] - points[i][1];
+        if (Math.hypot(dx, dy) < 0.5) return;
+        const angle = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 45;
+        expect(Math.min(angle, 45 - angle)).toBeLessThan(0.5);
       });
-      expect(new Set(ports).size).toBe(ports.length);
     }
   });
 

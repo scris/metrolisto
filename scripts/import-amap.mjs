@@ -26,8 +26,11 @@ const cityConfigs = {
   },
   suzhou: {
     amapId: '3205',
-    // Weiting is one station: Amap labels each line's platform with the through-running
-    // destination (唯亭(花桥) on Line 3, 唯亭(苏州新区火车站) on Line 11).
+    // Lines 3 and 11 run through at Weiting (every train continues), so they form one
+    // collection line. Amap labels each platform with the through destination
+    // (唯亭(花桥) on Line 3, 唯亭(苏州新区火车站) on Line 11); keep one station ID.
+    lineNames: { '3号线': '3号线/11号线', '11号线': '3号线/11号线' },
+    shortNames: { '3号线/11号线': '3/11' },
     stationIds: { 900000104525001: '900000039926038' }, // 唯亭 (3/11号线)
   },
   taizhou: {
@@ -55,6 +58,106 @@ function slicePath(path, a, b, loop) {
     if (length(alternate) < length(points)) points = alternate;
   }
   return [a, ...points, b].filter((p, i, all) => !i || distance(p, all[i - 1]) > 0.5);
+}
+/**
+ * Amap station coordinates drift by a few units along straight corridors. Align runs of
+ * consecutive stops that are nearly vertical or horizontal to one shared coordinate
+ * (preferring interchange stations), move the touching path points with them, and
+ * replace nearly straight paths with a straight line. Clear bends are kept.
+ */
+function straightenRuns(
+  stations,
+  lines,
+  segments,
+  tolerance = 10,
+  straightTolerance = 4,
+  cornerTolerance = 24,
+  chamfer = 20,
+) {
+  const byId = new Map(stations.map((s) => [s.id, s]));
+  const lineCount = new Map();
+  for (const line of lines)
+    for (const id of line.stationIds) lineCount.set(id, (lineCount.get(id) ?? 0) + 1);
+  const moved = new Map();
+  for (const axis of ['x', 'y']) {
+    const other = axis === 'x' ? 'y' : 'x';
+    const parent = new Map();
+    const find = (id) => (parent.get(id) === id ? id : find(parent.get(id)));
+    const union = (a, b) => {
+      parent.set(find(a), find(b));
+    };
+    for (const s of stations) parent.set(s.id, s.id);
+    for (const line of lines) {
+      line.stationIds.slice(1).forEach((b, i) => {
+        const a = line.stationIds[i];
+        const pa = byId.get(a),
+          pb = byId.get(b);
+        const along = Math.abs(pa[axis] - pb[axis]),
+          across = Math.abs(pa[other] - pb[other]);
+        if (along <= tolerance && across > tolerance) union(a, b);
+      });
+    }
+    const groups = new Map();
+    for (const s of stations) {
+      const root = find(s.id);
+      groups.set(root, [...(groups.get(root) ?? []), s]);
+    }
+    for (const group of groups.values()) {
+      if (group.length < 2) continue;
+      const shared = group.filter((s) => lineCount.get(s.id) > 1);
+      const values = (shared.length ? shared : group).map((s) => s[axis]).sort((p, q) => p - q);
+      const target = values[Math.floor((values.length - 1) / 2)];
+      for (const s of group) {
+        // A stop further away is a real bend, not drift; leave it in place.
+        if (s[axis] === target || Math.abs(s[axis] - target) > tolerance) continue;
+        moved.set(s.id, { ...(moved.get(s.id) ?? {}), [axis]: [s[axis], target] });
+        s[axis] = target;
+      }
+    }
+  }
+  const index = { x: 0, y: 1 };
+  for (const edge of segments) {
+    for (const [stationId, fromEnd] of [
+      [edge.from, true],
+      [edge.to, false],
+    ]) {
+      const move = moved.get(stationId);
+      if (!move) continue;
+      const points = fromEnd ? edge.points : [...edge.points].reverse();
+      for (const [axis, [before, after]] of Object.entries(move)) {
+        const i = index[axis];
+        points[0][i] = after;
+        // Carry the straight tail of the path (such as the end of a bend) with the station.
+        for (let k = 1; k < points.length - 1 && Math.abs(points[k][i] - before) <= tolerance; k++)
+          points[k][i] = after;
+      }
+    }
+    const [a, b] = [edge.points[0], edge.points.at(-1)];
+    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const offset = (p) =>
+      length ? Math.abs((b[0] - a[0]) * (a[1] - p[1]) - (a[0] - p[0]) * (b[1] - a[1])) / length : 0;
+    const inner = edge.points.slice(1, -1);
+    if (inner.every((p) => offset(p) <= straightTolerance)) {
+      edge.points = [a, b];
+      continue;
+    }
+    // An L-shaped path whose points hug one straight leg each becomes two straight legs
+    // joined by a 45° chamfer instead of the provider's wobbly corner.
+    const sx = Math.sign(b[0] - a[0]),
+      sy = Math.sign(b[1] - a[1]);
+    const c = Math.min(
+      chamfer,
+      Math.floor(Math.min(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) / 2),
+    );
+    if (!inner.length || c < 4) continue;
+    const near = (p, x, y) =>
+      (x !== null && Math.abs(p[0] - x) <= cornerTolerance) ||
+      (y !== null && Math.abs(p[1] - y) <= cornerTolerance);
+    if (inner.every((p) => near(p, b[0], a[1])))
+      edge.points = [a, [b[0] - sx * c, a[1]], [b[0], a[1] + sy * c], b];
+    else if (inner.every((p) => near(p, a[0], b[1])))
+      edge.points = [a, [a[0], b[1] - sy * c], [a[0] + sx * c, b[1]], b];
+  }
 }
 function makeCity(input) {
   const raw = JSON.parse(fs.readFileSync(input, 'utf8'));
@@ -85,12 +188,13 @@ function makeCity(input) {
   };
   for (const l of raw.l) {
     const name =
-      l.ln === '市域机场线'
+      config.lineNames?.[l.ln] ??
+      (l.ln === '市域机场线'
         ? '机场联络线'
         : id === 'shenzhen' && l.ln !== '2号线/8号线'
           ? l.ln.split('/')[0]
-          : l.ln;
-    const lineId = `${id}-${id === 'shenzhen' ? name : l.ln}`;
+          : l.ln);
+    const lineId = `${id}-${id === 'shenzhen' || config.lineNames?.[l.ln] ? name : l.ln}`;
     if (!lines.has(lineId))
       lines.set(lineId, {
         id: lineId,
@@ -149,7 +253,9 @@ function makeCity(input) {
     for (let i = 0; i < stops.length - (l.lo === '1' ? 0 : 1); i++) {
       const a = stops[i],
         b = stops[(i + 1) % stops.length];
-      addSegment(lineId, a.si, b.si, slicePath(path, point(a.p), point(b.p), l.lo === '1'));
+      // A stop merged into another station's ID starts from that station's coordinates.
+      const at = (s) => [stations.get(s.si).x, stations.get(s.si).y];
+      addSegment(lineId, a.si, b.si, slicePath(path, at(a), at(b), l.lo === '1'));
     }
   }
   // Lines absent from the primary source are maintained only in the city JSON.
@@ -347,6 +453,177 @@ function makeCity(input) {
       const a = byName(aName),
         b = byName(bName);
       addSegment(lineId, a.id, b.id, [[a.x, a.y], ...bends, [b.x, b.y]], oneWay, curve);
+    }
+  }
+  if (id === 'suzhou') {
+    // Order the through-running line from Suzhou Xinqu Railway Station to Huaqiao.
+    const through = lines.get(`${id}-3号线/11号线`);
+    const next = new Map();
+    for (const edge of segments.values()) {
+      if (edge.lineId !== through.id) continue;
+      next.set(edge.from, [...(next.get(edge.from) ?? []), edge.to]);
+      next.set(edge.to, [...(next.get(edge.to) ?? []), edge.from]);
+    }
+    const ordered = [byName('苏州新区火车站').id];
+    while (ordered.length < through.stationIds.length) {
+      const step = next.get(ordered.at(-1)).find((s) => !ordered.includes(s));
+      if (!step) throw new Error('3号线/11号线 is not a single chain');
+      ordered.push(step);
+    }
+    through.stationIds = ordered;
+    straightenRuns([...stations.values()], [...lines.values()], [...segments.values()]);
+    // Lay out Line 8 and the eastern end of Line 6 explicitly with horizontal, vertical
+    // and 45° approaches relative to the aligned interchange stations. Line 8 runs on a
+    // parallel lane 14 units north of Line 3 from Tangzhuang to Suzhou Yuanqu Railway
+    // Station, with offset drawing endpoints at both shared stations. The
+    // Qiongjidun–Xietang link stays a single diagonal between the parallel Lines 5 and 6.
+    const bd = byName('白荡北'),
+      tz = byName('唐庄'),
+      yq = byName('苏州园区火车站'),
+      ao = byName('苏州奥体中心'),
+      js = byName('金尚路'),
+      qj = byName('琼姬墩'),
+      xt = byName('斜塘'),
+      sz = byName('狮子山'),
+      xq = byName('苏州新区火车站'),
+      by = byName('白洋湾公园');
+    // Line 6 north-west: one straight line through the two interchanges, stops evenly
+    // spaced along it, meeting the horizontal section at Qingshanqiaobang.
+    const along = (t) => ({
+      x: Math.round(xq.x + (by.x - xq.x) * t),
+      y: Math.round(xq.y + (by.y - xq.y) * t),
+    });
+    const tq = (byName('青山桥浜').y - xq.y) / (by.y - xq.y),
+      qs = along(tq);
+    const run = tz.x - bd.x,
+      lane = tz.y - 14,
+      half = Math.round((js.x - ao.x) / 2);
+    const moves = {
+      新元: { x: byName('西津桥').x - 80, y: byName('西津桥').y - 80 },
+      时家桥: { x: byName('西津桥').x - 80 },
+      五潨泾: { x: bd.x + Math.round(run / 4), y: bd.y + Math.round(run / 4) },
+      古香圩: { x: bd.x + Math.round(run / 2), y: bd.y + Math.round(run / 2) },
+      南泽庄: { x: bd.x + Math.round((run * 3) / 4), y: bd.y + Math.round((run * 3) / 4) },
+      古楼: { y: lane },
+      华池浜: { x: yq.x },
+      时代广场: { x: yq.x },
+      苏州当代美术馆: { x: yq.x },
+      琼姬墩: { x: yq.x },
+      莲池桥: { x: xt.x },
+      仁爱路: { x: xt.x },
+      松涛街: { x: xt.x },
+      裕新路: { x: xt.x },
+      车坊: { x: xt.x },
+      保丰: along(1 / 4),
+      富强: along(2 / 4),
+      长泾: along(3 / 4),
+      金鸡墩: along(1 + (tq - 1) / 3),
+      虎丘: along(1 + ((tq - 1) * 2) / 3),
+      青山桥浜: { x: qs.x },
+      玉山路: { x: sz.x - (byName('玉山路').y - sz.y) },
+      塔园路: { x: sz.x + (sz.y - byName('塔园路').y) },
+      北斜步: { x: ao.x },
+      南斜步: { x: js.x - half, y: js.y - half },
+    };
+    const same = (p, q) => p[0] === q[0] && p[1] === q[1];
+    for (const [name, move] of Object.entries(moves)) {
+      const station = byName(name);
+      const old = [station.x, station.y];
+      Object.assign(station, move);
+      for (const edge of segments.values()) {
+        if (edge.from === station.id && same(edge.points[0], old))
+          edge.points[0] = [station.x, station.y];
+        if (edge.to === station.id && same(edge.points.at(-1), old))
+          edge.points[edge.points.length - 1] = [station.x, station.y];
+      }
+    }
+    // Full drawing paths keyed by station pair; Line 8 pairs not listed are straight.
+    const paths = {
+      [`${id}-8号线`]: (a, b) =>
+        ({
+          '时家桥|白洋湾公园': [
+            [a.x, a.y],
+            [a.x, b.y + (b.x - a.x)],
+            [b.x, b.y],
+          ],
+          '白洋湾公园|虎北路':
+            a.y === b.y
+              ? undefined
+              : [
+                  [a.x, a.y],
+                  [a.x + Math.abs(b.y - a.y), b.y],
+                  [b.x, b.y],
+                ],
+          '南泽庄|唐庄': [
+            [a.x, a.y],
+            [tz.x, bd.y + run],
+            [tz.x, lane],
+          ],
+          '唐庄|古楼': [
+            [tz.x, lane],
+            [b.x, b.y],
+          ],
+          '古楼|苏州园区火车站': [
+            [a.x, a.y],
+            [yq.x, lane],
+          ],
+          '苏州园区火车站|华池浜': [
+            [yq.x, lane],
+            [b.x, b.y],
+          ],
+          // East along a lane 14 units south of Line 6, then down into Xietang.
+          '苏州当代美术馆|琼姬墩': [
+            [a.x, a.y],
+            [qj.x, qj.y + 14],
+          ],
+          '琼姬墩|斜塘': [
+            [qj.x, qj.y + 14],
+            [xt.x - 14, qj.y + 14],
+            [xt.x, qj.y + 28],
+            [xt.x, xt.y],
+          ],
+        })[`${a.names[0].value}|${b.names[0].value}`] ?? [
+          [a.x, a.y],
+          [b.x, b.y],
+        ],
+      [`${id}-1号线`]: (a, b) =>
+        ['玉山路|狮子山', '狮子山|塔园路'].includes(`${a.names[0].value}|${b.names[0].value}`)
+          ? [
+              [a.x, a.y],
+              [b.x, b.y],
+            ]
+          : undefined,
+      [`${id}-6号线`]: (a, b) =>
+        [
+          xq,
+          byName('保丰'),
+          byName('富强'),
+          byName('长泾'),
+          by,
+          byName('金鸡墩'),
+          byName('虎丘'),
+        ].includes(a) && b !== byName('苏州新区火车站')
+          ? [
+              [a.x, a.y],
+              [b.x, b.y],
+            ]
+          : {
+              '北斜步|南斜步': [
+                [a.x, a.y],
+                [ao.x, js.y - (js.x - ao.x)],
+                [b.x, b.y],
+              ],
+              '南斜步|金尚路': [
+                [a.x, a.y],
+                [b.x, b.y],
+              ],
+            }[`${a.names[0].value}|${b.names[0].value}`],
+    };
+    for (const edge of segments.values()) {
+      const layout = paths[edge.lineId];
+      if (!layout) continue;
+      const points = layout(stations.get(edge.from), stations.get(edge.to));
+      if (points) edge.points = points;
     }
   }
   // The city JSON is the sole source for reviewed names and metadata. Refresh only

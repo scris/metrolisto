@@ -5,6 +5,7 @@ import { isInterchange, type Network } from '../lib/network';
 import {
   cubicArrow,
   cubicPath,
+  mergedStops,
   stationMarkerDistance,
   stationSpans,
   type StationSpan,
@@ -104,11 +105,16 @@ export default function MetroMap({
   const river = mapRivers[city.id];
   const spans = useMemo(() => stationSpans(city), [city]);
   const lineOverlap = useMemo(() => labelLineOverlap(city), [city]);
-  // Stops that only offer a change between direct services keep the ordinary marker.
-  const interchanges = useMemo(
-    () => new Set(city.stations.filter((s) => isInterchange(network, s.id)).map((s) => s.id)),
-    [network, city],
-  );
+  // Stops that only offer a change between direct services, or whose lines all run together on
+  // a shared section, keep the ordinary marker.
+  const interchanges = useMemo(() => {
+    const merged = mergedStops(city);
+    return new Set(
+      city.stations
+        .filter((s) => isInterchange(network, s.id) && !merged.has(s.id))
+        .map((s) => s.id),
+    );
+  }, [network, city]);
   const frame = useRef<HTMLDivElement>(null),
     svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 900, height: 570 });

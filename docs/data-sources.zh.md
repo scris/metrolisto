@@ -60,7 +60,7 @@
 
 以 2026 年 9 月版 [TfL Tube map](https://content.tfl.gov.uk/standard-tube-map.pdf) 及用户提供的[大字版](https://content.tfl.gov.uk/large-print-tube-map.pdf)为范围和英文站名依据，包含全部 11 条 Underground、六条具名 Overground、Elizabeth line、DLR、London Trams 和 London Cable Car；不含 Thameslink、普通公交、水上巴士及其他国铁服务。共 21 条线路、464 个站点或站内综合体、616 个按线路区分的区间。站名仅用英文，独立车站增加模式括注以区分。坐标和折线经过示意化调整，不直接复刻原 PDF 图形。
 
-- 共线段保留各线独立记录，绘图连续平行经过中间站，站点符号连接实际绘制端点。包括 Circle/Hammersmith & City/Metropolitan、Circle/District、District/Piccadilly、District/Hammersmith & City、Bakerloo/Lioness、Metropolitan/Piccadilly、District/Mildmay、Mildmay/Windrush，以及 Heathrow 的 Elizabeth/Piccadilly 共线段等。Piccadilly 绘图经过不停车的 District 站点坐标，但不增加停站或路由区间。除这类保持 14 单位间距的平行共线外，线路折线不得穿过不停靠车站的站点符号，不同线路在站间也不应重叠绘制（如 Waterloo & City 与 District、Jubilee 与 DLR Stratford 支线、Elizabeth 与 Central 均分开绘制）；`mapGeometry.test.ts` 会检查伦敦、阿姆斯特丹、里斯本、瓦伦西亚、马拉加、巴黎和斯德哥尔摩的这一约束，调整坐标后须重新运行。Circle 在 Paddington–Edgware Road 的南北两种进路分别建模，Hammersmith–市中心绕行–Edgware Road 交路不作为连续环线。
+- 共线段保留各线独立记录。连续 3 段及以上的长共线区段（Bakerloo/Lioness、Circle/Hammersmith & City/Metropolitan、Circle/District、District/Hammersmith & City、Metropolitan/Piccadilly）参考上海画法，各线在每个站点汇聚到站点锚点、站间以约 7 单位间距平行，中间站显示为普通站点；较短的共线区段（District/Piccadilly、District/Mildmay、Mildmay/Windrush、Bakerloo/Northern、Northern/Victoria 及 Heathrow 的 Elizabeth/Piccadilly）仍保持 14 单位间距连续平行，站点符号连接实际绘制端点。Piccadilly 绘图经过不停车的 District 站点坐标，但不增加停站或路由区间。除这类平行共线外，线路折线不得穿过不停靠车站的站点符号，不同线路在站间也不应重叠绘制（如 Waterloo & City 与 District、Jubilee 与 DLR Stratford 支线、Elizabeth 与 Central 均分开绘制）；`mapGeometry.test.ts` 会检查伦敦、阿姆斯特丹、里斯本、瓦伦西亚、马拉加、巴黎和斯德哥尔摩的这一约束，调整坐标后须重新运行。Circle 在 Paddington–Edgware Road 的南北两种进路分别建模，Hammersmith–市中心绕行–Edgware Road 交路不作为连续环线。
 - 站内换乘共用 ID。Bank/Monument、Paddington 相连的 Underground 站台归为站内综合体，因此站点数与 TfL 独立车站计数不同。Hackney Central/Downs 有站内连接通道，合并记录。需出站步行的 Hammersmith、Edgware Road、Bethnal Green、Shepherd’s Bush、West Hampstead、Shadwell、三座 Canary Wharf 和 West Croydon 保留独立站点；Woolwich 与 Woolwich Arsenal 也不合并，不推断步行边。
 - Underground 支线换车参照 [TfL 工作时刻表](https://tfl.gov.uk/corporate/publications-and-reports/working-timetables)。Hainault–Woodford 按 [Central WTT 70](https://content.tfl.gov.uk/cen-wtt-70.pdf) 的常规接驳交路处理；目录已列出 WTT 71，但未能获取其详细 PDF，因此不推断高峰限定直通交路。District 的 Olympia–High Street Kensington、Wimbledon–Edgware Road 保留直达。Piccadilly 的 Terminal 4 回路方向为 Hatton Cross → Terminal 4 → Terminals 2 & 3，列车不在 Hatton Cross 折返，从 Terminals 2 & 3 一侧经 Hatton Cross 前往 Terminal 4 计一次换车；Northern 在 Euston 的 Bank 支线与 Charing Cross 支线站台不贯通，Camden Town–Warren Street 直达需经 Mornington Crescent，King’s Cross St Pancras 与 Mornington Crescent、Warren Street 之间在 Euston 换车；Turnham Green 虽仅部分时段停靠，仍纳入拓扑。
 - [2026 年 5 月 17 日起的 Overground 时刻表](https://tfl.gov.uk/modes/london-overground/london-overground-timetables)用于核对交路。Windrush 维护 Highbury–Crystal Palace/West Croydon 和 Dalston Junction–Clapham Junction/New Cross 直通路径，Highbury 前往后两条分支需在共线段换车。Mildmay、Weaver 保留各分支。Battersea Park 的少量 Windrush 服务不在 Tube map 范围内。
@@ -161,10 +161,10 @@ Campo Grande、Marquês de Pombal、Baixa-Chiado、Alameda、Saldanha、São Seb
 
 ## 苏州（2026-10-13）
 
-范围为[高德公开苏州数据](https://map.amap.com/service/subway?srhdata=3205_drw_suzhou.json)中的苏州轨道交通，共 9 条线路、235 个独立站点、266 个区间，覆盖 1–8 号线及 11 号线（唯亭至昆山花桥），提供中英文站名。不含苏州有轨电车及在建线路。
+范围为[高德公开苏州数据](https://map.amap.com/service/subway?srhdata=3205_drw_suzhou.json)中的苏州轨道交通，共 8 条线路、235 个独立站点、266 个区间，覆盖 1–8 号线及 11 号线（唯亭至昆山花桥），提供中英文站名。不含苏州有轨电车及在建线路。
 
-- 高德将唯亭的两个站台按贯通方向标注为 3 号线的 `唯亭(花桥)` 和 11 号线的 `唯亭(苏州新区火车站)`。转换器配置将二者映射为同一站点 ID，站名为 `唯亭` / `Weiting`，两个原标注保留为搜索别名。
-- 3、11 号线[自 2024 年 6 月 29 日起贯通运营](https://m.thepaper.cn/newsDetail_forward_27826364)，交路为苏州新区火车站–花桥，工作日高峰另有 3 号线区间车。本协议按线路记录每段乘车，因此仍记为两条线路，跨越唯亭的行程在该站计一次换乘；后续如支持跨线交路再行调整。
+- 3、11 号线[自 2024 年 6 月 29 日起贯通运营](https://m.thepaper.cn/newsDetail_forward_27826364)，交路为苏州新区火车站–花桥，工作日高峰仅在 3 号线段另有区间车。所有列车在唯亭均贯通，因此转换器将两线合并为一条收藏线路 `3号线/11号线`（简称 `3/11`），站序自苏州新区火车站至花桥，跨越唯亭不计换乘。高德将唯亭两个站台标注为 `唯亭(花桥)` 和 `唯亭(苏州新区火车站)`，映射为同一站点 `唯亭` / `Weiting`，两个原标注保留为搜索别名。
+- 高德苏州坐标沿直线走廊有几个单位的漂移。转换器将近似竖直或水平的连续站点对齐到同一坐标（优先取换乘站坐标），把近似直线的折线改为直线，并显式排布 8 号线及 6 号线东端为水平、竖直和 45° 进路。8 号线在唐庄至苏州园区火车站之间沿 3 号线北侧 14 单位的平行车道绘制，站点符号横跨两线；琼姬墩–斜塘之间夹在平行的 5、6 号线之间，保留为单段斜线。
 - 原 4 号线支线红庄–木里按来源数据并入 7 号线。花桥与上海 11 号线换乘，但两个城市数据集互不关联。
 - 英文站名取自高德 `multilang.n.en` 字段并保留来源拼写，其中混有 `Jinfeng Lu`、`Lindunlu`、`Culture & Expo Center` 等不同形式；核对运营方双语线网图后再修正。
 

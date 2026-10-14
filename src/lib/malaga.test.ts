@@ -71,7 +71,13 @@ describe('Málaga metro', () => {
     );
     expect(edges.map((e) => e.lineId)).toEqual(['malaga-l1', 'malaga-l2']);
     expect(new Set(edges.map((e) => JSON.stringify(e.points))).size).toBe(2);
-    expect(stationSpans(city).get(id('Guadalmedina'))?.length).toBeCloseTo(14, 1);
+    const spans = stationSpans(city);
+    expect([...spans.keys()]).toEqual([id('El Perchel'), id('Guadalmedina')]);
+    for (const station of ['El Perchel', 'Guadalmedina']) {
+      const span = spans.get(id(station))!;
+      expect(span.length).toBeCloseTo(14, 1);
+      expect(Math.abs(span.angle)).toBeCloseTo(90, 5);
+    }
   });
 
   it('changes at El Perchel or Guadalmedina between the lines and rides Line 1 direct to the centre', () => {

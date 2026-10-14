@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cities } from '../data';
 import type { CityData, Point } from '../types';
 import example from '../../docs/city.example.json';
-import { stationMarkerDistance, stationSpans } from './mapGeometry';
+import { mergedStops, stationMarkerDistance, stationSpans } from './mapGeometry';
 
 describe('parallel station markers', () => {
   it('keeps every Paris interchange on a straight marker without branches', () => {
@@ -187,5 +187,23 @@ describe('parallel station markers', () => {
       return points[0];
     });
     expect(ports[0]).not.toEqual(ports[1]);
+  });
+
+  it('draws multi-line stops as ordinary stops only when every line shares a drawn section', () => {
+    const merged = (cityId: string, name: string) => {
+      const city = cities.find((c) => c.id === cityId)!;
+      const station = city.stations.find((s) => s.names.some((n) => n.value === name))!;
+      return mergedStops(city).has(station.id);
+    };
+    expect(merged('shanghai', '中潭路')).toBe(true);
+    expect(merged('shanghai', '人民广场')).toBe(false);
+    expect(merged('valencia', 'Campanar')).toBe(true);
+    expect(merged('valencia', 'Empalme')).toBe(false);
+    // Two lines sharing a neighbour on separately drawn tracks still meet at an interchange.
+    expect(merged('paris', 'Hôtel de Ville')).toBe(false);
+    // Offset tracks wider than a shared section keep the capsule and the interchange marker.
+    expect(merged('malaga', 'El Perchel')).toBe(false);
+    expect(merged('london', 'Great Portland Street')).toBe(true);
+    expect(merged('london', 'Kew Gardens')).toBe(false);
   });
 });
