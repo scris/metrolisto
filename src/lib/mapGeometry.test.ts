@@ -48,37 +48,43 @@ describe('parallel station markers', () => {
     expect(stationMarkerDistance(station, span, [station.x, station.y])).toBe(60);
   });
 
-  it.each(['london', 'guangzhou', 'shanghai', 'valencia', 'malaga', 'paris'])(
-    '%s: encloses the drawing endpoints at shared stops and branches',
-    (id) => {
-      const city = cities.find((c) => c.id === id)!;
-      const spans = stationSpans(city);
-      expect(spans.size).toBeGreaterThan(0);
-      for (const edge of city.segments) {
-        for (const [station, point] of [
-          [edge.from, edge.points?.[0]],
-          [edge.to, edge.points?.at(-1)],
-        ] as const) {
-          const span = spans.get(station);
-          if (!span || !point) continue;
-          const dx = span.to[0] - span.from[0],
-            dy = span.to[1] - span.from[1];
-          const px = point[0] - span.from[0],
-            py = point[1] - span.from[1];
-          const along = span.length
-            ? Math.max(0, Math.min(span.length, (dx * px + dy * py) / span.length))
-            : 0;
-          const distance = Math.hypot(
-            px - (span.length ? (dx * along) / span.length : 0),
-            py - (span.length ? (dy * along) / span.length : 0),
-          );
-          expect(distance).toBeLessThanOrEqual(span.padding + 0.001);
-        }
+  it.each([
+    'london',
+    'guangzhou',
+    'shanghai',
+    'valencia',
+    'malaga',
+    'paris',
+    'stockholm',
+    'suzhou',
+  ])('%s: encloses the drawing endpoints at shared stops and branches', (id) => {
+    const city = cities.find((c) => c.id === id)!;
+    const spans = stationSpans(city);
+    expect(spans.size).toBeGreaterThan(0);
+    for (const edge of city.segments) {
+      for (const [station, point] of [
+        [edge.from, edge.points?.[0]],
+        [edge.to, edge.points?.at(-1)],
+      ] as const) {
+        const span = spans.get(station);
+        if (!span || !point) continue;
+        const dx = span.to[0] - span.from[0],
+          dy = span.to[1] - span.from[1];
+        const px = point[0] - span.from[0],
+          py = point[1] - span.from[1];
+        const along = span.length
+          ? Math.max(0, Math.min(span.length, (dx * px + dy * py) / span.length))
+          : 0;
+        const distance = Math.hypot(
+          px - (span.length ? (dx * along) / span.length : 0),
+          py - (span.length ? (dy * along) / span.length : 0),
+        );
+        expect(distance).toBeLessThanOrEqual(span.padding + 0.001);
       }
-    },
-  );
+    }
+  });
 
-  it.each(['london', 'amsterdam', 'lisbon', 'valencia', 'malaga', 'paris'])(
+  it.each(['london', 'amsterdam', 'lisbon', 'valencia', 'malaga', 'paris', 'stockholm'])(
     '%s: draws no line through a stop it does not serve',
     (id) => {
       const city = cities.find((c) => c.id === id)!;

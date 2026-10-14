@@ -69,6 +69,22 @@ describe('city distance ordering', () => {
     expect(cityDistanceKm(current, other)).toBeLessThan(max);
   });
 
+  it.each([
+    ['stockholm', 'amsterdam', 1100, 1160],
+    ['suzhou', 'shanghai', 80, 90],
+    ['taizhou', 'hangzhou', 210, 225],
+  ])('puts the nearest bundled city next to %s', (id, neighbor, min, max) => {
+    const current = cities.find((city) => city.id === id)!;
+    const other = cities.find((city) => city.id === neighbor)!;
+    expect(
+      sortCitiesByDistance(cities, current)
+        .slice(0, 2)
+        .map((city) => city.id),
+    ).toEqual([id, neighbor]);
+    expect(cityDistanceKm(current, other)).toBeGreaterThan(min);
+    expect(cityDistanceKm(current, other)).toBeLessThan(max);
+  });
+
   it('puts the current city first even when another city has the same coordinates', () => {
     const current = validateCity(example);
     const other = { ...current, id: 'other-city' };

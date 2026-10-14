@@ -2,7 +2,7 @@
 
 [English](data-sources.en.md) | 简体中文
 
-快照日期为 2026-10-03，杭州及广州补充于 2026-10-04，伦敦及阿姆斯特丹补充于 2026-10-05，里斯本、瓦伦西亚、马拉加及巴黎补充于 2026-10-08。运行时使用仓库内的 JSON，不在线请求地图 API。
+快照日期为 2026-10-03，杭州及广州补充于 2026-10-04，伦敦及阿姆斯特丹补充于 2026-10-05，里斯本、瓦伦西亚、马拉加及巴黎补充于 2026-10-08，斯德哥尔摩、苏州及台州补充于 2026-10-13。运行时使用仓库内的 JSON，不在线请求地图 API。
 
 ## 主要来源
 
@@ -60,7 +60,7 @@
 
 以 2026 年 9 月版 [TfL Tube map](https://content.tfl.gov.uk/standard-tube-map.pdf) 及用户提供的[大字版](https://content.tfl.gov.uk/large-print-tube-map.pdf)为范围和英文站名依据，包含全部 11 条 Underground、六条具名 Overground、Elizabeth line、DLR、London Trams 和 London Cable Car；不含 Thameslink、普通公交、水上巴士及其他国铁服务。共 21 条线路、464 个站点或站内综合体、616 个按线路区分的区间。站名仅用英文，独立车站增加模式括注以区分。坐标和折线经过示意化调整，不直接复刻原 PDF 图形。
 
-- 共线段保留各线独立记录，绘图连续平行经过中间站，站点符号连接实际绘制端点。包括 Circle/Hammersmith & City/Metropolitan、Circle/District、District/Piccadilly、District/Hammersmith & City、Bakerloo/Lioness、Metropolitan/Piccadilly、District/Mildmay、Mildmay/Windrush，以及 Heathrow 的 Elizabeth/Piccadilly 共线段等。Piccadilly 绘图经过不停车的 District 站点坐标，但不增加停站或路由区间。除这类保持 14 单位间距的平行共线外，线路折线不得穿过不停靠车站的站点符号，不同线路在站间也不应重叠绘制（如 Waterloo & City 与 District、Jubilee 与 DLR Stratford 支线、Elizabeth 与 Central 均分开绘制）；`mapGeometry.test.ts` 会检查伦敦、阿姆斯特丹、里斯本、瓦伦西亚、马拉加和巴黎的这一约束，调整坐标后须重新运行。Circle 在 Paddington–Edgware Road 的南北两种进路分别建模，Hammersmith–市中心绕行–Edgware Road 交路不作为连续环线。
+- 共线段保留各线独立记录，绘图连续平行经过中间站，站点符号连接实际绘制端点。包括 Circle/Hammersmith & City/Metropolitan、Circle/District、District/Piccadilly、District/Hammersmith & City、Bakerloo/Lioness、Metropolitan/Piccadilly、District/Mildmay、Mildmay/Windrush，以及 Heathrow 的 Elizabeth/Piccadilly 共线段等。Piccadilly 绘图经过不停车的 District 站点坐标，但不增加停站或路由区间。除这类保持 14 单位间距的平行共线外，线路折线不得穿过不停靠车站的站点符号，不同线路在站间也不应重叠绘制（如 Waterloo & City 与 District、Jubilee 与 DLR Stratford 支线、Elizabeth 与 Central 均分开绘制）；`mapGeometry.test.ts` 会检查伦敦、阿姆斯特丹、里斯本、瓦伦西亚、马拉加、巴黎和斯德哥尔摩的这一约束，调整坐标后须重新运行。Circle 在 Paddington–Edgware Road 的南北两种进路分别建模，Hammersmith–市中心绕行–Edgware Road 交路不作为连续环线。
 - 站内换乘共用 ID。Bank/Monument、Paddington 相连的 Underground 站台归为站内综合体，因此站点数与 TfL 独立车站计数不同。Hackney Central/Downs 有站内连接通道，合并记录。需出站步行的 Hammersmith、Edgware Road、Bethnal Green、Shepherd’s Bush、West Hampstead、Shadwell、三座 Canary Wharf 和 West Croydon 保留独立站点；Woolwich 与 Woolwich Arsenal 也不合并，不推断步行边。
 - Underground 支线换车参照 [TfL 工作时刻表](https://tfl.gov.uk/corporate/publications-and-reports/working-timetables)。Hainault–Woodford 按 [Central WTT 70](https://content.tfl.gov.uk/cen-wtt-70.pdf) 的常规接驳交路处理；目录已列出 WTT 71，但未能获取其详细 PDF，因此不推断高峰限定直通交路。District 的 Olympia–High Street Kensington、Wimbledon–Edgware Road 保留直达。Piccadilly 的 Terminal 4 回路方向为 Hatton Cross → Terminal 4 → Terminals 2 & 3，列车不在 Hatton Cross 折返，从 Terminals 2 & 3 一侧经 Hatton Cross 前往 Terminal 4 计一次换车；Northern 在 Euston 的 Bank 支线与 Charing Cross 支线站台不贯通，Camden Town–Warren Street 直达需经 Mornington Crescent，King’s Cross St Pancras 与 Mornington Crescent、Warren Street 之间在 Euston 换车；Turnham Green 虽仅部分时段停靠，仍纳入拓扑。
 - [2026 年 5 月 17 日起的 Overground 时刻表](https://tfl.gov.uk/modes/london-overground/london-overground-timetables)用于核对交路。Windrush 维护 Highbury–Crystal Palace/West Croydon 和 Dalston Junction–Clapham Junction/New Cross 直通路径，Highbury 前往后两条分支需在共线段换车。Mildmay、Weaver 保留各分支。Battersea Park 的少量 Windrush 服务不在 Tube map 范围内。
@@ -145,6 +145,33 @@ Campo Grande、Marquês de Pombal、Baixa-Chiado、Alameda、Saldanha、São Seb
 - RER B、D 共线 Gare du Nord – Châtelet – Les Halles，绘图平行分开，站点符号横跨两线；其余线路不共用轨道。
 - 坐标为改编的示意几何。城区参照用户提供的 [RATP 官方地铁示意图](https://www.ratp.fr/plan-metro)（2026 年 1 月版，`Plan-Metro.1736413859.pdf`），保留连续的线路走廊，并为换乘综合体的各线保留独立绘制端点，避免汇入平均坐标造成折返。郊区参照[区域线网图](https://eu.ftp.opendatasoft.com/stif/PlansRegion/Plans/REGION_PF_sans_tram.pdf)及站序，以连续的横线、竖线和斜线排布。RER D 的两条 Viry-Châtillon–Corbeil 路径、两种 Melun 进路及 Malesherbes 支线分别绘制，Massy 的 B/C 线路也保留独立端点。`mapGeometry.test.ts` 已将巴黎纳入“线路不穿过不服务站点”的检查，`paris.test.ts` 检查 D 南部路由及站序。调整排版时保留 ID、拓扑、单向区间和 `sameLineTransfers`，不要以综合体平均坐标重新生成走线。
 
+## 斯德哥尔摩（2026-10-13）
+
+范围为 SL 地铁（tunnelbana）线网，共 3 条颜色线路、100 个独立站点、102 个区间；中英文界面均显示瑞典语站名。线路、支线与排版参照 [SL 官方地图页](https://sl.se/reseplanering/kartor)的地铁线网图，并以[斯德哥尔摩地铁车站列表](https://en.wikipedia.org/wiki/List_of_Stockholm_Metro_stations)交叉核对站序与线路归属。不含 pendeltåg 通勤铁路、Tvärbanan 等轻轨、Spårväg City、Roslagsbanan、Saltsjöbanan、公交及渡轮；从未启用的 Kymlinge 不纳入。
+
+| 线路                 | 交路       | 终点                                                                     | 站数 |
+| -------------------- | ---------- | ------------------------------------------------------------------------ | ---- |
+| 绿线（Gröna linjen） | 17、18、19 | Åkeshov / Alvik / Hässelby strand – Skarpnäck / Farsta strand / Hagsätra | 49   |
+| 红线（Röda linjen）  | 13、14     | Norsborg – Ropsten；Fruängen – Mörby centrum                             | 36   |
+| 蓝线（Blå linjen）   | 10、11     | Hjulsta / Akalla – Kungsträdgården                                       | 20   |
+
+- 每种颜色为一条收藏线路，编号交路以 `services` 记录：17 Åkeshov–Skarpnäck、18 Alvik–Farsta strand、19 Hässelby strand–Hagsätra、13 Norsborg–Ropsten、14 Fruängen–Mörby centrum、10 Hjulsta–Kungsträdgården、11 Akalla–Kungsträdgården。同色两支线之间需在共线主干换车；`sameLineTransfers` 标记 Gullmarsplan、Skärmarbrink、Liljeholmen、Östermalmstorg、Västra skogen 五处分岔，主干至任一支线仍算直达。
+- T-Centralen、Gamla stan、Slussen 为绿线与红线共站，两线平行绘制且站点符号横跨两线；Fridhemsplan 为绿线与蓝线共站，T-Centralen 三线共站。没有共轨区间。
+- 站名沿用 SL 的瑞典语形式，如 `S:t Eriksplan`、`T-Centralen`、`Gamla stan`、`Tekniska högskolan`、`Mörby centrum`；`Sankt Eriksplan`、`Stockholm Central`、`KTH` 作为搜索别名。线路颜色沿用线网图的绿、红、蓝。坐标为应用手工编排。
+
+## 苏州（2026-10-13）
+
+范围为[高德公开苏州数据](https://map.amap.com/service/subway?srhdata=3205_drw_suzhou.json)中的苏州轨道交通，共 9 条线路、235 个独立站点、266 个区间，覆盖 1–8 号线及 11 号线（唯亭至昆山花桥），提供中英文站名。不含苏州有轨电车及在建线路。
+
+- 高德将唯亭的两个站台按贯通方向标注为 3 号线的 `唯亭(花桥)` 和 11 号线的 `唯亭(苏州新区火车站)`。转换器配置将二者映射为同一站点 ID，站名为 `唯亭` / `Weiting`，两个原标注保留为搜索别名。
+- 3、11 号线[自 2024 年 6 月 29 日起贯通运营](https://m.thepaper.cn/newsDetail_forward_27826364)，交路为苏州新区火车站–花桥，工作日高峰另有 3 号线区间车。本协议按线路记录每段乘车，因此仍记为两条线路，跨越唯亭的行程在该站计一次换乘；后续如支持跨线交路再行调整。
+- 原 4 号线支线红庄–木里按来源数据并入 7 号线。花桥与上海 11 号线换乘，但两个城市数据集互不关联。
+- 英文站名取自高德 `multilang.n.en` 字段并保留来源拼写，其中混有 `Jinfeng Lu`、`Lindunlu`、`Culture & Expo Center` 等不同形式；核对运营方双语线网图后再修正。
+
+## 台州（2026-10-13）
+
+范围为[高德公开台州数据](https://map.amap.com/service/subway?srhdata=3310_drw_taizhou.json)中的台州市域铁路，仅 S1 线，共 15 个站点、14 个区间，台州火车站至温岭城南，类型记为 `rail`。该线于 [2022 年 12 月通过竣工验收，全线 15 站](https://hznews.hangzhou.com.cn/shehui/content/2022-12/05/content_8417478_4.htm)，2022 年 12 月 28 日开通；在建的 S2 线不纳入。车站[现行英文站名为汉语拼音](https://news.ifeng.com/c/8PuXX3MtFHs)，如 `Taizhou Huochezhan`、`Enze Yiyuan`，市交通运输局已委托设计正式英文站名，公布后应替换 `en` 名称。
+
 ## 更新数据
 
 将新的高德 JSON 下载到本地后运行，转换器按文件内的城市代码只更新传入的城市：
@@ -167,7 +194,7 @@ pnpm build
 
 杭州都市圈于 2026-10-07 补齐 41 个缺失英文站名（杭州 7 个、绍兴 34 个），取自[高德杭州数据](https://map.amap.com/service/subway?srhdata=3301_drw_hangzhou.json)与[高德绍兴数据](https://map.amap.com/service/subway?srhdata=3306_drw_shaoxing.json)的 `multilang.n.en` 字段；旧 `en` 字段为空不代表没有英文名。荆长路的 `jingchang Road` 统一首字母为 `Jingchang Road`，其余补充名称保留来源拼写。当前杭州、绍兴、海宁共 311 个站点均提供英文名，测试检查完整性。
 
-北京、上海、伦敦、巴黎由 MetroListo 应用开发者维护；深圳、广州都市圈由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州都市圈、阿姆斯特丹、里斯本、瓦伦西亚、马拉加由 [scris](https://github.io/scris) 贡献。
+北京、上海、伦敦、巴黎由 MetroListo 应用开发者维护；深圳、广州都市圈由 [Hashmapw](https://github.com/Hashmapw) 贡献。杭州都市圈、阿姆斯特丹、里斯本、瓦伦西亚、马拉加、斯德哥尔摩、苏州、台州由 [scris](https://github.io/scris) 贡献。
 
 英文站名参照运营方双语线网图，保留其专名、方向缩写和英文括注，不按界面语言重新翻译专名：
 
@@ -175,9 +202,11 @@ pnpm build
 - 北京：[京港地铁官方线网图](https://www.mtr.bj.cn/article/line)，本次读取的[原始双语图](https://cdnwww.mtr.bj.cn/bjmtr/default/mxFXoKAXCCYv61DjKHdzl.jpg)含亦庄 T1；例如 `Qu Zhuang`、`Lujuan Dong (E)`、`3 Hao Hangzhanlou (Terminal 3)`。
 - 深圳：[深圳地铁官方双语线网图](https://www.szmc.net/SMARTC/upload/image/20260630/1782803829923076269.png)，包含坪山云巴小图；例如 `Window of the World`、`SUAT`、`Airport (T3)`。
 - 广州：[广州地铁官方双语线网图（2026-07-30）](https://cs.gzmtr.com/ckfw/xlu_2020/202607/W020260730790914610429.png)，包含广佛线及佛山 2、3 号线；例如 `Xiaode Dong`、`Luocun`、`Qiandeng Lake`。
+- 苏州：高德 `multilang.n.en` 字段，保留来源拼写；例如 `Suzhou Railway Station`、`Guangji Nanlu`、`Culture & Expo Center`。
+- 台州：现行拼音站名，如 `Taizhou Huochezhan`、`Wenling Di 1 Renmin Yiyuan`，待正式英文站名公布后替换。
 
-伦敦仅提供英文名称，阿姆斯特丹仅提供荷兰语名称，里斯本仅提供葡萄牙语名称，瓦伦西亚仅提供瓦伦西亚语名称，马拉加仅提供西班牙语名称，巴黎仅提供法语名称，均使用现有界面名称回退规则；搜索忽略变音符号，无需另加无重音别名。中国城市的中英文站名统一存放在 `src/data/<city>.json` 的 `names` 列表中（`zh-CN` / `en`），其他名称、来源与贡献者也在同一文件维护。`aliases` 仅用于搜索别名。
+伦敦仅提供英文名称，阿姆斯特丹仅提供荷兰语名称，里斯本仅提供葡萄牙语名称，瓦伦西亚仅提供瓦伦西亚语名称，马拉加仅提供西班牙语名称，巴黎仅提供法语名称，斯德哥尔摩仅提供瑞典语名称，均使用现有界面名称回退规则；搜索忽略变音符号，无需另加无重音别名。中国城市的中英文站名统一存放在 `src/data/<city>.json` 的 `names` 列表中（`zh-CN` / `en`），其他名称、来源与贡献者也在同一文件维护。`aliases` 仅用于搜索别名。
 
-高德转换器支持上海、北京、深圳和广州的拓扑与坐标更新，保留已核对的名称、别名、城市元数据和线路顺序。北京、上海新增站点或线路缺少官方英文名时会提示补齐，测试会检查双语完整性。其他城市可直接按统一协议贡献 JSON。
+高德转换器支持上海、北京、深圳、广州、苏州和台州的拓扑与坐标更新，保留已核对的名称、别名、城市元数据和线路顺序。北京、上海新增站点或线路缺少官方英文名时会提示补齐，社区维护城市的新增站点自动填入高德英文名，测试会检查双语完整性。其他城市可直接按统一协议贡献 JSON。
 
 用户贡献城市使用 `attribution: { "kind": "community", "name": "贡献者名称" }`，显示“由〈名称〉贡献”。字段要求见 [城市数据协议](city-data.zh.md)。

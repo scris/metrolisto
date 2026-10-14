@@ -24,6 +24,17 @@ const cityConfigs = {
     stationIds: { 900000074701016: '900000099784007' }, // 新市墟 (12/14号线)
     shortNames: { '14号线支线(知识城线)': '14知识城', APM线: 'APM', 广佛线: '广佛' },
   },
+  suzhou: {
+    amapId: '3205',
+    // Weiting is one station: Amap labels each line's platform with the through-running
+    // destination (唯亭(花桥) on Line 3, 唯亭(苏州新区火车站) on Line 11).
+    stationIds: { 900000104525001: '900000039926038' }, // 唯亭 (3/11号线)
+  },
+  taizhou: {
+    amapId: '3310',
+    shortNames: { S1线: 'S1' },
+    kinds: { S1线: 'rail' },
+  },
 };
 
 const point = (p) => p.split(' ').map(Number);
@@ -98,13 +109,14 @@ function makeCity(input) {
         ],
         color: `#${l.cl}`,
         kind:
-          name === '磁浮线'
+          config.kinds?.[name] ??
+          (name === '磁浮线'
             ? 'maglev'
             : name === '机场联络线'
               ? 'rail'
               : name === '西郊线'
                 ? 'tram'
-                : 'metro',
+                : 'metro'),
         stationIds: [],
       });
     const line = lines.get(lineId);
@@ -114,10 +126,17 @@ function makeCity(input) {
       .map((s) => ({ ...s, si: config.stationIds?.[s.si] ?? s.si }));
     for (const s of stops) {
       const [x, y] = point(s.p);
+      // Community-maintained cities start from Amap's English names; official cities
+      // take verified names from their bilingual maps instead.
+      const english =
+        current.attribution?.kind !== 'official' ? s.multilang?.n?.en?.trim() : undefined;
       if (!stations.has(s.si))
         stations.set(s.si, {
           id: s.si,
-          names: [{ language: 'zh-CN', value: s.n }],
+          names: [
+            { language: 'zh-CN', value: s.n },
+            ...(english ? [{ language: 'en', value: english }] : []),
+          ],
           x,
           y,
           label: Number(s.lg),

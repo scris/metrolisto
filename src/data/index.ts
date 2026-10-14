@@ -9,6 +9,9 @@ import lisbon from './lisbon.json';
 import valencia from './valencia.json';
 import malaga from './malaga.json';
 import paris from './paris.json';
+import stockholm from './stockholm.json';
+import suzhou from './suzhou.json';
+import taizhou from './taizhou.json';
 import type { CityData } from '../types';
 import { validateCity } from '../lib/validate';
 
@@ -25,4 +28,7 @@ export const cities: CityData[] = [
   valencia,
   malaga,
   paris,
+  stockholm,
+  suzhou,
+  taizhou,
 ].map(validateCity);

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "taizhou",
+  "zhName": "台州",
+  "enName": "Taizhou",
+  "localLanguage": "zh-CN",
+  "latitude": 28.6564,
+  "longitude": 121.4208,
+  "updatedAt": "2026-10-13",
+  "description": "台州市域铁路 S1 线；不含在建的 S2 线",
+  "descriptionEn": "Taizhou suburban railway Line S1; excludes Line S2 under construction",
+  "attribution": { "kind": "community", "name": "scris" },
+  "center": [313, 1000],
+  "sources": [
+    { "title": "高德公开台州地铁数据", "titleEn": "Amap public Taizhou metro data", "url": "https://map.amap.com/service/subway?srhdata=3310_drw_taizhou.json" },
+    { "title": "杭州网：台州市域铁路 S1 线一期通过竣工验收，全线 15 站", "titleEn": "Hangzhou.com.cn: Taizhou suburban railway Line S1 phase 1 passes final acceptance with 15 stations", "url": "https://hznews.hangzhou.com.cn/shehui/content/2022-12/05/content_8417478_4.htm" },
+    { "title": "凤凰网：S1 线站名采用汉语拼音，市交通运输局称正式英文站名方案已委托设计", "titleEn": "ifeng.com: S1 stations are signed in Pinyin; the transport bureau has commissioned formal English names", "url": "https://news.ifeng.com/c/8PuXX3MtFHs" }
+  ],
+  "stations": [
+    { "id": "900000168091001", "names": [{ "language": "zh-CN", "value": "台州火车站" }, { "language": "en", "value": "Taizhou Huochezhan" }], "aliases": ["TaiZhouHuoCheZhan"], "x": 204, "y": 0, "label": 6 },
+    { "id": "900000168091002", "names": [{ "language": "zh-CN", "value": "学院路" }, { "language": "en", "value": "Xueyuan Lu" }], "aliases": ["XueYuanLu"], "x": 412, "y": 127, "label": 0 },
+    { "id": "900000168091003", "names": [{ "language": "zh-CN", "value": "国博中心" }, { "language": "en", "value": "Guobo Zhongxin" }], "aliases": ["GuoBoZhongXin"], "x": 405, "y": 199, "label": 3 },
+    { "id": "900000168091004", "names": [{ "language": "zh-CN", "value": "汇丰路" }, { "language": "en", "value": "Huifeng Lu" }], "aliases": ["HuiFengLu"], "x": 319, "y": 268, "label": 3 },
+    { "id": "900000168091005", "names": [{ "language": "zh-CN", "value": "锦泰" }, { "language": "en", "value": "Jintai" }], "aliases": ["JinTai"], "x": 188, "y": 359, "label": 0 },
+    { "id": "900000168091006", "names": [{ "language": "zh-CN", "value": "恩泽医院" }, { "language": "en", "value": "Enze Yiyuan" }], "aliases": ["EnZeYiYuan"], "x": 0, "y": 417, "label": 2 },
+    { "id": "900000168091007", "names": [{ "language": "zh-CN", "value": "台州汽车南站" }, { "language": "en", "value": "Taizhou Qiche Nanzhan" }], "aliases": ["TaiZhouQiCheNanZhan"], "x": 0, "y": 530, "label": 6 },
+    { "id": "900000168091008", "names": [{ "language": "zh-CN", "value": "泽国" }, { "language": "en", "value": "Zeguo" }], "aliases": ["ZeGuo"], "x": 1, "y": 899, "label": 2 },
+    { "id": "900000168091009", "names": [{ "language": "zh-CN", "value": "温岭火车站" }, { "language": "en", "value": "Wenling Huochezhan" }], "aliases": ["WenLingHuoCheZhan"], "x": 1, "y": 1002, "label": 6 },
+    { "id": "900000168091010", "names": [{ "language": "zh-CN", "value": "汇川王" }, { "language": "en", "value": "Huichuanwang" }], "aliases": ["HuiChuanWang"], "x": 2, "y": 1324, "label": 2 },
+    { "id": "900000168091011", "names": [{ "language": "zh-CN", "value": "温岭第一人民医院" }, { "language": "en", "value": "Wenling Di 1 Renmin Yiyuan" }], "aliases": ["WenLingDiYiRenMinYiYuan"], "x": 2, "y": 1501, "label": 6 },
+    { "id": "900000168091012", "names": [{ "language": "zh-CN", "value": "九龙大道" }, { "language": "en", "value": "Jiulong Dadao" }], "aliases": ["JiuLongDaDao"], "x": 105, "y": 1600, "label": 1 },
+    { "id": "900000168091013", "names": [{ "language": "zh-CN", "value": "万昌路" }, { "language": "en", "value": "Wanchang Lu" }], "aliases": ["WanChangLu"], "x": 238, "y": 1702, "label": 5 },
+    { "id": "900000168091014", "names": [{ "language": "zh-CN", "value": "南屏" }, { "language": "en", "value": "Nanping" }], "aliases": ["NanPing"], "x": 357, "y": 1794, "label": 1 },
+    { "id": "900000168091015", "names": [{ "language": "zh-CN", "value": "城南" }, { "language": "en", "value": "Chengnan" }], "aliases": ["ChengNan"], "x": 626, "y": 2000, "label": 4 }
+  ],
+  "lines": [
+    { "id": "taizhou-S1线", "names": [{ "language": "zh-CN", "value": "S1线" }, { "language": "en", "value": "Line S1" }], "shortNames": [{ "language": "zh-CN", "value": "S1" }, { "language": "en", "value": "S1" }], "color": "#01A2E2", "kind": "rail", "stationIds": ["900000168091001", "900000168091002", "900000168091003", "900000168091004", "900000168091005", "900000168091006", "900000168091007", "900000168091008", "900000168091009", "900000168091010", "900000168091011", "900000168091012", "900000168091013", "900000168091014", "900000168091015"] }
+  ],
+  "segments": [
+    { "id": "taizhou-S1线:900000168091001:900000168091002", "lineId": "taizhou-S1线", "from": "900000168091001", "to": "900000168091002", "points": [[204, 0], [204, 82], [207, 92], [211, 100], [222, 110], [235, 120], [247, 124], [258, 127], [412, 127]] },
+    { "id": "taizhou-S1线:900000168091002:900000168091003", "lineId": "taizhou-S1线", "from": "900000168091002", "to": "900000168091003", "points": [[412, 127], [421, 129], [428, 132], [434, 136], [438, 142], [441, 147], [443, 155], [443, 162], [440, 168], [435, 174], [423, 184], [405, 199]] },
+    { "id": "taizhou-S1线:900000168091003:900000168091004", "lineId": "taizhou-S1线", "from": "900000168091003", "to": "900000168091004", "points": [[405, 199], [319, 268]] },
+    { "id": "taizhou-S1线:900000168091004:900000168091005", "lineId": "taizhou-S1线", "from": "900000168091004", "to": "900000168091005", "points": [[319, 268], [211, 354], [202, 358], [188, 359]] },
+    { "id": "taizhou-S1线:900000168091005:900000168091006", "lineId": "taizhou-S1线", "from": "900000168091005", "to": "900000168091006", "points": [[188, 359], [53, 360], [32, 361], [23, 363], [16, 365], [11, 369], [6, 374], [3, 379], [0, 386], [0, 417]] },
+    { "id": "taizhou-S1线:900000168091006:900000168091007", "lineId": "taizhou-S1线", "from": "900000168091006", "to": "900000168091007", "points": [[0, 417], [0, 530]] },
+    { "id": "taizhou-S1线:900000168091007:900000168091008", "lineId": "taizhou-S1线", "from": "900000168091007", "to": "900000168091008", "points": [[0, 530], [1, 899]] },
+    { "id": "taizhou-S1线:900000168091008:900000168091009", "lineId": "taizhou-S1线", "from": "900000168091008", "to": "900000168091009", "points": [[1, 899], [1, 1002]] },
+    { "id": "taizhou-S1线:900000168091009:900000168091010", "lineId": "taizhou-S1线", "from": "900000168091009", "to": "900000168091010", "points": [[1, 1002], [2, 1324]] },
+    { "id": "taizhou-S1线:900000168091010:900000168091011", "lineId": "taizhou-S1线", "from": "900000168091010", "to": "900000168091011", "points": [[2, 1324], [2, 1501]] },
+    { "id": "taizhou-S1线:900000168091011:900000168091012", "lineId": "taizhou-S1线", "from": "900000168091011", "to": "900000168091012", "points": [[2, 1501], [3, 1516], [4, 1520], [6, 1523], [10, 1527], [105, 1600]] },
+    { "id": "taizhou-S1线:900000168091012:900000168091013", "lineId": "taizhou-S1线", "from": "900000168091012", "to": "900000168091013", "points": [[105, 1600], [238, 1702]] },
+    { "id": "taizhou-S1线:900000168091013:900000168091014", "lineId": "taizhou-S1线", "from": "900000168091013", "to": "900000168091014", "points": [[238, 1702], [357, 1794]] },
+    { "id": "taizhou-S1线:900000168091014:900000168091015", "lineId": "taizhou-S1线", "from": "900000168091014", "to": "900000168091015", "points": [[357, 1794], [626, 2000]] }
+  ]
+}
