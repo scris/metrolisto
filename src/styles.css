@@ -23,6 +23,8 @@
   --error-1: #ffefef;
 
   --bg: #f3f5f9;
+  /* Keep the floating bar close to the home indicator, with a minimum edge gap. */
+  --mobile-tabbar-bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) - 12px));
   --surface: #ffffff;
   --fill: #f1f3f7;
   --fill-hover: #e7eaf0;
@@ -164,6 +166,7 @@ svg {
 .app {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(900px 520px at 8% -8%, rgba(42, 107, 255, 0.1), transparent 70%),
     radial-gradient(700px 480px at 100% 0%, rgba(120, 100, 255, 0.07), transparent 70%), var(--bg);
@@ -233,6 +236,10 @@ svg {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 .topbar {
   display: flex;
@@ -1295,6 +1302,7 @@ svg {
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -2056,7 +2064,7 @@ svg {
 .mobile-tabbar.t-tab-bar.t-tab-bar--fixed.t-tab-bar--round {
   left: 24px;
   right: 24px;
-  bottom: calc(14px + env(safe-area-inset-bottom));
+  bottom: var(--mobile-tabbar-bottom);
   max-width: 360px;
   height: 64px;
   margin: 0 auto;
@@ -2205,8 +2213,7 @@ svg {
   .mobile-map .app-body {
     height: 100%;
     min-height: 0;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    padding-bottom: calc(76px + var(--mobile-tabbar-bottom));
   }
   .mobile-map .topbar {
     flex-shrink: 0;
@@ -2264,7 +2271,7 @@ svg {
   .app-body {
     margin-left: 0;
     width: 100%;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    padding-bottom: calc(82px + var(--mobile-tabbar-bottom));
   }
   .topbar {
     padding: 12px 16px 0;
@@ -2374,7 +2381,7 @@ svg {
     height: min(64vh, 540px);
   }
   .map-frame.expanded {
-    inset: 8px 8px calc(92px + env(safe-area-inset-bottom));
+    inset: 8px 8px calc(78px + var(--mobile-tabbar-bottom));
   }
   .map-ctl {
     right: 10px;
@@ -2487,7 +2494,7 @@ svg {
   }
   .toast {
     left: 50%;
-    bottom: calc(92px + env(safe-area-inset-bottom));
+    bottom: calc(78px + var(--mobile-tabbar-bottom));
     width: max-content;
   }
   .banner {

@@ -1049,6 +1049,7 @@ export default function App() {
           {(!isMobile || page !== 'map') && (
             <footer className="footer">
               <span>{t('全地铁 MetroListo · 从一站，到一城。')}</span>
+              {locale === 'zh-CN' && <span>浙ICP备2025209903号-3A</span>}
               <span>
                 {t('示意线网，非实时导航')}
                 <button onClick={() => setHelpOpen(true)}>
@@ -1063,6 +1064,7 @@ export default function App() {
       {isMobile && (
         <TabBar
           className="mobile-tabbar"
+          safeAreaInsetBottom={false}
           value={page}
           split={false}
           shape="round"

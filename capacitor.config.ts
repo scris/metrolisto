@@ -4,9 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.tianzeds.ml',
   appName: '全地铁',
   webDir: 'dist',
-  backgroundColor: '#f6f8fb',
+  backgroundColor: '#f3f5f9',
   ios: {
-    contentInset: 'automatic',
+    // CSS owns the safe-area spacing so the page background reaches every edge.
+    contentInset: 'never',
   },
 };
 
